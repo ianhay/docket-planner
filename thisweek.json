@@ -1,0 +1,547 @@
+{
+  "metadata": {
+    "generated": "2026-06-28T09:12:14.411974",
+    "week_start": "Wed 10",
+    "week_end": "Tue 16",
+    "coles_saleid": "66019",
+    "coles_url": "https://www.coles.com.au/catalogues/view#view=list&saleId=66019&areaName=c-wa-met",
+    "woolies_saleid": "66046",
+    "woolies_url": "https://www.woolworths.com.au/shop/catalogue/view#view=list&saleId=66046&areaName=WA",
+    "note": "Real prices read from catalogues; items marked ~ are everyday/estimated",
+    "review_pending": true,
+    "review_message": "\u26a0\ufe0f New meals generated! Household can review, skip, or swap meals below. Once at least 4 meals are approved, you're ready to shop."
+  },
+  "recipes": [
+    {
+      "id": "prawn-ginger-stir-fry",
+      "name": "Prawn & ginger stir-fry on rice",
+      "desc": "Karumba raw banana prawns Down Down $19/kg. Ginger, broccolini stems, FODMAP-safe soy.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF option",
+      "serves": 2,
+      "nut": {
+        "kj": 2080,
+        "prot": 34,
+        "fib": 4,
+        "carb": 52
+      },
+      "waste": "Uses broccolini stems + spring-onion greens from other meals",
+      "recipe": [
+        "Peel 400g prawns; pat dry. Rice on.",
+        "Wok on high: ginger + broccolini stems 1 min in garlic-infused oil.",
+        "Prawns 90 sec, soy + rice vinegar + white pepper, spring-onion greens off heat."
+      ],
+      "items": [
+        [
+          "Raw banana prawns 400g",
+          "c",
+          7.6,
+          null,
+          null
+        ],
+        [
+          "Coles light soy 500mL",
+          "c",
+          3.0,
+          null,
+          "pantry \u2014 lasts months"
+        ],
+        [
+          "Ginger knob",
+          "e",
+          1.2,
+          null,
+          "keeps weeks"
+        ]
+      ]
+    },
+    {
+      "id": "beef-braise-mash",
+      "name": "Slow-braised oyster blade & mash",
+      "desc": "Coles oyster blade $3 off \u2014 the right cut for a winter braise. Woolies diced tomatoes $1.10/can.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2540,
+        "prot": 44,
+        "fib": 6,
+        "carb": 30
+      },
+      "waste": "Uses carrot-bag remainder; both tomato cans fully used; freezes well",
+      "recipe": [
+        "Brown 500g oyster blade chunks hard in batches; set aside.",
+        "Carrots + 2 cans diced tomatoes + 1 cup water + rosemary + balsamic; beef back in.",
+        "Lid on, 160\u00b0C oven 2.5 hrs. Mash potatoes with olive oil."
+      ],
+      "items": [
+        [
+          "Beef oyster blade 500g",
+          "c",
+          12.0,
+          15.0,
+          null
+        ],
+        [
+          "Woolworths diced tomatoes 400g \u00d72",
+          "w",
+          2.2,
+          null,
+          "both cans used"
+        ],
+        [
+          "Rosemary, fresh",
+          "e",
+          3.0,
+          null,
+          "dries well"
+        ]
+      ]
+    },
+    {
+      "id": "peking-duck-orange",
+      "name": "Peking duck legs with orange & potatoes",
+      "desc": "Luv-a-Duck Peking legs on special \u2014 pre-cooked. WA navel oranges $3.50/kg.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2820,
+        "prot": 36,
+        "fib": 4,
+        "carb": 32
+      },
+      "waste": "Legs are a sealed two-serve pack; orange zest + juice both used",
+      "recipe": [
+        "Duck legs per pack, 200\u00b0C ~25 min until skin crisps.",
+        "Pan sauce: juice + zest of 1 orange, splash soy, 1 tsp maple, reduce.",
+        "Roast potatoes from shared bag alongside; orange segments in a leafy salad."
+      ],
+      "items": [
+        [
+          "Luv-a-Duck Peking duck legs 650g",
+          "w",
+          10.0,
+          null,
+          null
+        ],
+        [
+          "WA navel oranges \u00d72",
+          "e",
+          1.75,
+          null,
+          "$3.50/kg both stores"
+        ],
+        [
+          "Potatoes (from shared bag)",
+          "e",
+          0,
+          null,
+          "allocate 200g"
+        ]
+      ]
+    },
+    {
+      "id": "pork-belly-bok-choy",
+      "name": "Braised pork belly with bok choy",
+      "desc": "Pork belly on special. Ginger, soy, maple \u2014 low FODMAP Chinese-style braise.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2820,
+        "prot": 32,
+        "fib": 4,
+        "carb": 24
+      },
+      "waste": "Soy & ginger are shared; bok choy from stir-fry supply",
+      "recipe": [
+        "Brown 500g pork belly chunks; place in pot.",
+        "Add 400mL stock + 4 tbsp soy + 2 tbsp maple + ginger slices.",
+        "Simmer 45 min, covered. Bok choy in for last 5 min."
+      ],
+      "items": [
+        [
+          "Pork belly 500g",
+          "w",
+          11.5,
+          null,
+          null
+        ],
+        [
+          "Beef stock 400mL (onion-free)",
+          "e",
+          3.0,
+          null,
+          null
+        ],
+        [
+          "Ginger knob",
+          "e",
+          1.2,
+          null,
+          "keeps weeks"
+        ]
+      ]
+    },
+    {
+      "id": "baked-white-fish-herbs",
+      "name": "Baked white fish with herb butter & lemon",
+      "desc": "Fish on special. Whole baked with fresh herbs, lemon, olive oil \u2014 minimal effort.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 1980,
+        "prot": 37,
+        "fib": 3,
+        "carb": 12
+      },
+      "waste": "Herbs dry well; fish simple + fast",
+      "recipe": [
+        "Place 2 fish fillets on foil; top with lemon slices, fresh herbs (dill/thyme), olive oil, salt.",
+        "Bake 200\u00b0C 14 min. Steamed potatoes + leafy salad on side."
+      ],
+      "items": [
+        [
+          "Flathead or bream fillets 400g",
+          "c",
+          9.6,
+          null,
+          null
+        ],
+        [
+          "Dill or thyme, fresh",
+          "e",
+          3.0,
+          null,
+          "dries well"
+        ],
+        [
+          "Lemon \u00d71",
+          "e",
+          0.7,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "id": "roast-chicken-root-veg",
+      "name": "40%-off roast chicken & root veg",
+      "desc": "Steggles whole bird on special. Lemon & thyme in the cavity, no allium stuffing.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2700,
+        "prot": 48,
+        "fib": 7,
+        "carb": 35
+      },
+      "waste": "Carcass \u2192 onion-free stock; leftover meat \u2192 lunches; potato bag shared 3 meals",
+      "recipe": [
+        "Oven 190\u00b0C. Lemon + thyme in the cavity, oil + salt the skin.",
+        "Roast ~1.7kg bird 75\u201380 min over potatoes + carrots, baste twice.",
+        "Rest 15 min under foil. Pan juices + cornflour = GF gravy."
+      ],
+      "items": [
+        [
+          "Whole chicken ~1.7kg",
+          "w",
+          6.8,
+          11.9,
+          "carcass \u2192 stock"
+        ],
+        [
+          "WA white potatoes 2kg bag",
+          "e",
+          6.0,
+          null,
+          "shared 3 meals"
+        ],
+        [
+          "Carrots \u00d74",
+          "e",
+          1.6,
+          null,
+          "half now, half for braise"
+        ],
+        [
+          "Thyme, fresh",
+          "e",
+          3.0,
+          null,
+          "dries well"
+        ]
+      ]
+    },
+    {
+      "id": "orange-chicken-stir-fry",
+      "name": "Orange & chilli chicken stir-fry with rice",
+      "desc": "Chicken on special. Orange zest & juice (actual citrus, not bottled \u2014 low FODMAP). Bok choy, ginger.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2420,
+        "prot": 44,
+        "fib": 5,
+        "carb": 44
+      },
+      "waste": "Orange shared with duck night; ginger keeps weeks",
+      "recipe": [
+        "Slice 450g chicken breast thin; toss with 1 tsp cornflour.",
+        "Wok on high: sear chicken in batches, set aside; ginger + bok choy 1 min.",
+        "Orange juice + zest + soy + 1 tsp maple; chicken back in, whole chilli pepper if you like."
+      ],
+      "items": [
+        [
+          "Chicken breast 450g",
+          "c",
+          7.2,
+          null,
+          null
+        ],
+        [
+          "Bok choy \u00d72",
+          "e",
+          3.0,
+          null,
+          null
+        ],
+        [
+          "Orange (WA navel)",
+          "e",
+          0.88,
+          null,
+          "shared with other meals"
+        ],
+        [
+          "Ginger knob",
+          "e",
+          1.2,
+          null,
+          "keeps weeks"
+        ]
+      ]
+    },
+    {
+      "id": "pork-apple-ginger",
+      "name": "Pork & apple ginger braise (apple OK low FODMAP)",
+      "desc": "Pork on special. Granny Smith apples low FODMAP, ginger, apple cider vinegar \u2014 gentle braise.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2420,
+        "prot": 38,
+        "fib": 5,
+        "carb": 42
+      },
+      "waste": "Apples fully used; ginger keeps weeks",
+      "recipe": [
+        "Brown 450g pork shoulder chunks; set aside.",
+        "Apples (peeled, cored) + ginger slices + 1 cup stock + 2 tbsp cider vinegar; pork back in.",
+        "Lid on, 160\u00b0C oven 1.5 hrs. Mash potatoes on the side."
+      ],
+      "items": [
+        [
+          "Pork shoulder 450g",
+          "w",
+          8.1,
+          null,
+          null
+        ],
+        [
+          "Granny Smith apples \u00d73",
+          "e",
+          1.5,
+          null,
+          "low FODMAP"
+        ],
+        [
+          "Ginger knob",
+          "e",
+          1.2,
+          null,
+          "keeps weeks"
+        ],
+        [
+          "Potatoes (from shared bag)",
+          "e",
+          0,
+          null,
+          "allocate 250g"
+        ]
+      ]
+    },
+    {
+      "id": "lemongrass-chicken-rice",
+      "name": "Lemongrass chicken soup & jasmine rice",
+      "desc": "Chicken on special. Lemongrass (dried is fine), ginger, lime, coconut milk \u2014 fragrant and low FODMAP.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2140,
+        "prot": 35,
+        "fib": 3,
+        "carb": 46
+      },
+      "waste": "Lemongrass dried keeps months; ginger shared",
+      "recipe": [
+        "Heat garlic-infused oil + 1 tbsp lemongrass paste (or dried) + ginger, 1 min.",
+        "Add 600mL stock + 200mL coconut milk, simmer 8 min with 300g chicken cubes.",
+        "Lime juice; coriander if available. Jasmine rice on side."
+      ],
+      "items": [
+        [
+          "Chicken breast 300g",
+          "c",
+          4.8,
+          null,
+          null
+        ],
+        [
+          "Lemongrass paste jar (or dried)",
+          "e",
+          4.0,
+          null,
+          "lasts months"
+        ],
+        [
+          "Coconut milk 200mL",
+          "e",
+          1.1,
+          null,
+          "half can"
+        ],
+        [
+          "Lime \u00d71",
+          "e",
+          0.8,
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "id": "slow-cooker-beef-stew",
+      "name": "Slow-cooker beef & root veg stew",
+      "desc": "Beef on special. Set in morning, ready for dinner \u2014 carrots, potatoes, herbs, wine.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2420,
+        "prot": 38,
+        "fib": 7,
+        "carb": 36
+      },
+      "waste": "Uses carrot & potato bag remainder; freezes well",
+      "recipe": [
+        "Brown 600g beef cubes in batches; place in slow cooker.",
+        "Add carrots + potatoes (from shared bag) + 300mL red wine + 200mL stock + thyme.",
+        "Cook on low 6\u20138 hrs. Freeze any extra."
+      ],
+      "items": [
+        [
+          "Beef chuck 600g",
+          "c",
+          10.8,
+          null,
+          null
+        ],
+        [
+          "Red wine 300mL (check FODMAP)",
+          "e",
+          4.0,
+          null,
+          null
+        ],
+        [
+          "Beef stock 200mL (onion-free)",
+          "e",
+          1.5,
+          null,
+          null
+        ],
+        [
+          "Thyme, fresh",
+          "e",
+          3.0,
+          null,
+          "dries well"
+        ]
+      ]
+    },
+    {
+      "id": "pork-apple-cider-braise",
+      "name": "Pork chops in apple cider braise",
+      "desc": "Pork chops on special. Granny Smith apples (low FODMAP), cider, thyme.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2360,
+        "prot": 38,
+        "fib": 4,
+        "carb": 36
+      },
+      "waste": "Apples fully used; thyme dries",
+      "recipe": [
+        "Brown 2 pork chops; set aside.",
+        "Deglaze with 200mL cider + 200mL stock; return chops.",
+        "Add apple chunks (peeled, cored) + thyme; braise 15 min. Mash potatoes on side."
+      ],
+      "items": [
+        [
+          "Pork chops \u00d72 (~500g)",
+          "w",
+          9.5,
+          null,
+          null
+        ],
+        [
+          "Apple cider 200mL (check FODMAP label)",
+          "e",
+          3.5,
+          null,
+          null
+        ],
+        [
+          "Granny Smith apples \u00d72",
+          "e",
+          1.0,
+          null,
+          "low FODMAP"
+        ],
+        [
+          "Thyme, fresh",
+          "e",
+          3.0,
+          null,
+          "dries well"
+        ]
+      ]
+    },
+    {
+      "id": "squid-chips-qukes",
+      "name": "Salt & pepper squid, chips & qukes",
+      "desc": "KB's S&P squid half price. Air-fryer chips + smashed cucumber = casual Friday fakeaway.",
+      "fod": "LF \u00b7 check crumb for FODMAP",
+      "serves": 2,
+      "nut": {
+        "kj": 2280,
+        "prot": 26,
+        "fib": 3,
+        "carb": 46
+      },
+      "waste": "Uses qukes pack half + open chips bag from pork night",
+      "recipe": [
+        "Squid + chips per pack timing (air fryer ~15 min).",
+        "Qukes: smash, salt 10 min, rice vinegar + sesame oil.",
+        "Lemon over everything. Check crumb ingredients if strict FODMAP this week."
+      ],
+      "items": [
+        [
+          "KB's Salt & Pepper Squid 360g",
+          "c",
+          6.0,
+          12.0,
+          null
+        ]
+      ]
+    }
+  ]
+}
