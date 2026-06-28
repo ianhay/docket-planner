@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Docket — Weekly Meal Planner</title>
+<style>
+  :root{
+    --paper:#FAF7F0; --ink:#1C1B17; --ink-soft:#6B675C;
+    --coles:#E01A22; --woolies:#178841; --either:#8A8270;
+    --special:#FFD84D; --line:#E4DFD2; --card:#FFFFFF; --ok:#178841;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    max-width:480px; margin:0 auto; min-height:100vh; padding-bottom:90px;
+  }
+  header{padding:20px 18px 10px}
+  .eyebrow{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  h1{font-size:1.9rem;font-weight:800;letter-spacing:-.03em;line-height:1.05;margin-top:2px}
+  h1 .tear{color:var(--ink-soft);font-weight:400}
+  .weekline{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:.78rem;color:var(--ink-soft)}
+  .dot{width:7px;height:7px;border-radius:50%}
+  .dot.c{background:var(--coles)} .dot.w{background:var(--woolies)}
+  .loading{display:inline-block;font-size:.7rem;color:var(--ink-soft);animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+  nav{display:flex;gap:4px;padding:14px 18px 0;position:sticky;top:0;background:var(--paper);z-index:5;border-bottom:1px solid var(--line)}
+  nav button{flex:1;border:none;background:none;font:inherit;font-size:.8rem;font-weight:600;color:var(--ink-soft);padding:10px 4px 12px;border-bottom:3px solid transparent;cursor:pointer}
+  nav button.on{color:var(--ink);border-bottom-color:var(--ink)}
+
+  section{display:none;padding:18px}
+  section.show{display:block;animation:rise .25s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  h2{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin:18px 0 10px}
+  h2:first-child{margin-top:0}
+
+  .stepper{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .stepper button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--paper);font-size:1.4rem;cursor:pointer}
+  .stepper .val{flex:1;text-align:center}
+  .stepper .val b{font-size:1.7rem}
+  .stepper .val span{display:block;font-size:.72rem;color:var(--ink-soft)}
+
+  .dayrow{display:flex;gap:5px}
+  .dayrow button{flex:1;border:1px solid var(--line);background:var(--card);font:inherit;font-size:.78rem;font-weight:600;color:var(--ink-soft);padding:11px 0;border-radius:10px;cursor:pointer}
+  .dayrow button.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+
+  .meal{background:var(--card);border:1px solid var(--ok);border-radius:16px;padding:14px;margin-bottom:12px;transition:.15s}
+  .meal.skipped{border-color:var(--line);opacity:.45}
+  .mtop{display:flex;align-items:flex-start;gap:8px}
+  .mtop .when{flex:1}
+  .meal .day{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+  .meal h3{font-size:1.02rem;font-weight:700;margin:3px 0 6px;letter-spacing:-.01em}
+  .meal p{font-size:.8rem;color:var(--ink-soft);line-height:1.45}
+  .order{display:flex;flex-direction:column;gap:4px}
+  .order button{width:34px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-size:.8rem;color:var(--ink-soft)}
+  .order button:disabled{opacity:.25}
+  .pricerow{display:flex;gap:8px;margin-top:10px}
+  .pricebox{flex:1;border:1px solid var(--line);border-radius:10px;padding:7px 10px;text-align:center}
+  .pricebox b{display:block;font-size:1rem}
+  .pricebox span{font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .pricebox.save b{color:var(--woolies)}
+  .nutri{display:flex;gap:0;margin-top:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .nutri div{flex:1;text-align:center;padding:6px 2px;border-right:1px solid var(--line)}
+  .nutri div:last-child{border-right:none}
+  .nutri b{display:block;font-size:.82rem}
+  .nutri span{font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .tag{font-size:.68rem;font-weight:700;border-radius:6px;padding:3px 7px}
+  .tag.c{background:#FCE4E5;color:var(--coles)}
+  .tag.w{background:#E0F2E6;color:var(--woolies)}
+  .tag.fd{background:#EEEAE0;color:var(--ink-soft);font-weight:600}
+  .tag.nw{background:#E8F0E2;color:#3E6B2A;font-weight:600}
+  .mealbtns{display:flex;gap:8px;margin-top:12px}
+  .mealbtns button{flex:1;border-radius:10px;border:1.5px solid var(--line);background:var(--paper);font:inherit;font-size:.82rem;font-weight:600;padding:10px;cursor:pointer}
+  .mealbtns .skipbtn.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .mealbtns .recipe{flex:0 0 auto;padding:10px 13px}
+  .recipebox{display:none;margin-top:12px;border-top:1px dashed var(--line);padding-top:11px;font-size:.82rem;line-height:1.55}
+  .recipebox.open{display:block}
+  .recipebox ol{padding-left:18px}
+  .recipebox li{margin-bottom:4px}
+  .savebar{font-size:.8rem;color:var(--ink-soft);margin-bottom:14px}
+  .savebar b{color:var(--ink)}
+
+  .receipt{background:#fff;border:1px solid var(--line);border-radius:4px;padding:20px 16px 26px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8rem;line-height:1.5;box-shadow:0 2px 10px rgba(28,27,23,.06);clip-path:polygon(0 0,100% 0,100% calc(100% - 7px),97.5% 100%,95% calc(100% - 7px),92.5% 100%,90% calc(100% - 7px),87.5% 100%,85% calc(100% - 7px),82.5% 100%,80% calc(100% - 7px),77.5% 100%,75% calc(100% - 7px),72.5% 100%,70% calc(100% - 7px),67.5% 100%,65% calc(100% - 7px),62.5% 100%,60% calc(100% - 7px),57.5% 100%,55% calc(100% - 7px),52.5% 100%,50% calc(100% - 7px),47.5% 100%,45% calc(100% - 7px),42.5% 100%,40% calc(100% - 7px),37.5% 100%,35% calc(100% - 7px),32.5% 100%,30% calc(100% - 7px),27.5% 100%,25% calc(100% - 7px),22.5% 100%,20% calc(100% - 7px),17.5% 100%,15% calc(100% - 7px),12.5% 100%,10% calc(100% - 7px),7.5% 100%,5% calc(100% - 7px),2.5% 100%,0 calc(100% - 7px))}
+  .receipt .rhead{text-align:center;border-bottom:1px dashed #bbb;padding-bottom:10px;margin-bottom:10px}
+  .receipt .rhead b{font-size:.92rem;letter-spacing:.08em}
+  .rgroup{margin:12px 0 4px;font-weight:700;letter-spacing:.06em}
+  .rgroup .gdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+  .ritem{display:flex;align-items:flex-start;gap:9px;padding:5px 0}
+  .ritem input{width:18px;height:18px;margin-top:1px;accent-color:var(--ink);flex:0 0 auto}
+  .ritem label{flex:1;cursor:pointer}
+  .ritem label small{display:block;color:#999;font-size:.68rem}
+  .ritem .pr{white-space:nowrap}
+  .ritem .was{text-decoration:line-through;color:#999;margin-right:5px}
+  .ritem.done label{text-decoration:line-through;color:#aaa}
+  .rtotal{border-top:1px dashed #bbb;margin-top:12px;padding-top:10px}
+  .rtotal div{display:flex;justify-content:space-between}
+  .rtotal .big{font-weight:700;font-size:.95rem}
+  .rfoot{text-align:center;color:#999;margin-top:14px;font-size:.7rem}
+
+  .actions{display:flex;gap:8px;margin-top:16px}
+  .actions button{flex:1;border-radius:12px;border:none;font:inherit;font-weight:700;font-size:.86rem;padding:14px;cursor:pointer;background:var(--ink);color:var(--paper)}
+  .actions button.alt{background:var(--card);border:1.5px solid var(--line);color:var(--ink)}
+  .toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);border-radius:10px;padding:10px 16px;font-size:.82rem;opacity:0;pointer-events:none;transition:.25s;z-index:20}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+
+  .cta{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--paper) 70%,transparent)}
+  .cta button{width:100%;border:none;border-radius:14px;background:var(--ink);color:var(--paper);font:inherit;font-size:.95rem;font-weight:700;padding:16px;cursor:pointer}
+
+  /* ---- add-meal trigger + modal ---- */
+  .addmeal-trigger{width:100%;border:1.5px dashed var(--line);background:var(--card);color:var(--ink-soft);
+    font:inherit;font-weight:600;font-size:.82rem;border-radius:12px;padding:11px;margin-bottom:14px;cursor:pointer}
+  .addmeal-trigger:active{background:var(--paper)}
+
+  .modal{position:fixed;inset:0;z-index:50;display:none;background:rgba(28,27,23,.45);align-items:flex-end;justify-content:center}
+  .modal.open{display:flex;animation:fade .2s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal-card{background:var(--paper);width:100%;max-width:480px;max-height:92vh;overflow:auto;
+    border-radius:18px 18px 0 0;padding:0 0 calc(14px + env(safe-area-inset-bottom));animation:rise .25s ease}
+  .modal-head{position:sticky;top:0;background:var(--paper);display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;z-index:3}
+  .modal-head b{font-size:1.05rem;letter-spacing:-.01em}
+  .modal-head .x{background:var(--card);width:32px;height:32px;border-radius:9px;border:1px solid var(--line);font-size:.9rem;cursor:pointer;color:var(--ink-soft)}
+  .seg{display:flex;gap:4px;padding:0 18px 4px;position:sticky;top:52px;background:var(--paper);z-index:2}
+  .seg button{flex:1;border:1px solid var(--line);background:var(--card);font:inherit;font-size:.76rem;font-weight:600;color:var(--ink-soft);padding:9px 4px;border-radius:10px;cursor:pointer}
+  .seg button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .modal-body{padding:12px 18px 0}
+  .rb-pane{display:none}
+  .rb-pane.show{display:block;animation:rise .2s ease}
+
+  .field{display:block;margin-bottom:10px}
+  .field>span{display:block;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+  .field input,.field textarea,.field select{width:100%;font:inherit;font-size:.9rem;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 11px}
+  .field textarea{resize:vertical;line-height:1.45}
+  .field-row{display:flex;gap:10px}
+  .field-row .sm{flex:0 0 84px}
+  .field-row .field{flex:1}
+  .field-label{display:block;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);margin:6px 0}
+  .nut-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+  .nut-grid .field{margin-bottom:8px}
+  .nut-grid .field input{padding:9px 6px;text-align:center}
+
+  .items-head{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+  .ghost{border:1px solid var(--line);background:var(--card);font:inherit;font-size:.74rem;font-weight:600;color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer}
+  .itemrow-head,.itemrow{display:grid;grid-template-columns:1fr 60px 52px 52px 1fr 26px;gap:5px}
+  .itemrow-head{font-size:.56rem;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);padding:2px 2px 4px}
+  .itemrow{margin-bottom:6px}
+  .itemrow input,.itemrow select{width:100%;font:inherit;font-size:.8rem;border:1px solid var(--line);border-radius:8px;padding:8px 5px;background:var(--card);color:var(--ink)}
+  .itemrow .i-del{border:1px solid var(--line);background:var(--paper);border-radius:8px;color:var(--ink-soft);cursor:pointer;font-size:.72rem;padding:0}
+
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.78rem;line-height:1.5}
+  .rb-note{font-size:.76rem;color:var(--ink-soft);line-height:1.5;margin-bottom:10px}
+  .rb-note code{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 4px;font-size:.72rem}
+  .rb-saved{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-bottom:8px}
+  .rb-saved b{font-size:.88rem}
+  .rb-saved small{display:block;color:var(--ink-soft);font-size:.7rem;margin-top:2px}
+  .rb-saved button{border:1px solid var(--line);background:var(--paper);border-radius:9px;width:38px;height:36px;cursor:pointer;font-size:.95rem;flex:0 0 auto}
+
+  .modal-foot{display:flex;gap:8px;position:sticky;bottom:0;background:var(--paper);padding:12px 0 4px;margin-top:6px}
+  .modal-foot button{flex:1;border:none;border-radius:12px;background:var(--ink);color:var(--paper);font:inherit;font-weight:700;font-size:.86rem;padding:13px;cursor:pointer}
+  .modal-foot button.alt{background:var(--card);border:1.5px solid var(--line);color:var(--ink);flex:0 0 38%}
+
+  .url-row{display:flex;gap:8px}
+  .url-row input{flex:1}
+  .fetchbtn{border:none;border-radius:10px;background:var(--ink);color:var(--paper);font:inherit;font-weight:700;font-size:.82rem;padding:0 16px;cursor:pointer;white-space:nowrap}
+  .fetchbtn:disabled{opacity:.55}
+  .rb-status{font-size:.76rem;color:var(--ink-soft);line-height:1.45;margin-top:10px;min-height:1em}
+  .rb-src{margin-top:12px}
+  .rb-src summary{font-size:.74rem;color:var(--ink-soft);cursor:pointer;font-weight:600}
+  .warn{background:#FFF6D6;border:1px solid #E9D27A;color:#6B5B15;border-radius:10px;padding:9px 11px;font-size:.76rem;line-height:1.45;margin-top:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Powered by GitHub + Automation</div>
+  <h1>The Docket <span class="tear">— plan, then shop</span></h1>
+  <div class="weekline" id="weekline">
+    <span class="loading">loading week…</span>
+  </div>
+</header>
+
+<nav>
+  <button class="on" data-step="0">1 · Setup</button>
+  <button data-step="1">2 · Meals</button>
+  <button data-step="2">3 · List</button>
+</nav>
+
+<!-- ============ STEP 1 ============ -->
+<section class="show" id="s0">
+  <h2>Dinners &amp; people</h2>
+  <div style="display:flex;gap:10px">
+    <div class="stepper" style="flex:1">
+      <button onclick="bumpDays(-1)">−</button>
+      <div class="val"><b id="dayCount">5</b><span>dinners</span></div>
+      <button onclick="bumpDays(1)">+</button>
+    </div>
+    <div class="stepper" style="flex:1">
+      <button onclick="bumpPpl(-1)">−</button>
+      <div class="val"><b id="pplCount">2</b><span>people</span></div>
+      <button onclick="bumpPpl(1)">+</button>
+    </div>
+  </div>
+  <p style="font-size:.78rem;color:var(--ink-soft);margin-top:8px">All meals are approved by default (household is synced). Tap "Skip" to exclude a meal.</p>
+
+  <h2 style="margin-top:20px">Shop day</h2>
+  <div class="dayrow" id="dayRow">
+    <button data-day="Mon" onclick="setShopDay('Mon')">Mon</button>
+    <button data-day="Tue" onclick="setShopDay('Tue')">Tue</button>
+    <button data-day="Wed" onclick="setShopDay('Wed')">Wed</button>
+    <button data-day="Thu" onclick="setShopDay('Thu')">Thu</button>
+    <button data-day="Fri" onclick="setShopDay('Fri')">Fri</button>
+    <button data-day="Sat" onclick="setShopDay('Sat')">Sat</button>
+    <button data-day="Sun" onclick="setShopDay('Sun')">Sun</button>
+  </div>
+  <p style="font-size:.78rem;color:var(--ink-soft);margin-top:8px">Day 1 of the week is your shop day — meals run from there.</p>
+
+  <h2 style="margin-top:20px">About this week</h2>
+  <div id="metadata-display" style="font-size:.8rem;color:var(--ink-soft);line-height:1.6"></div>
+</section>
+
+<!-- ============ STEP 2 ============ -->
+<section id="s1">
+  <div class="savebar"><b id="inCount">5 of 5</b> meals in · est. cost <b id="runCost">$0</b></div>
+  <button class="addmeal-trigger" onclick="rbOpen()">+ Add a meal to the bank</button>
+  <div id="mealList"></div>
+</section>
+
+<!-- ============ STEP 3 ============ -->
+<section id="s2">
+  <div class="receipt" id="receipt"></div>
+  <div class="actions">
+    <button class="alt" onclick="copyList(false)">Copy list</button>
+    <button onclick="copyList(true)">Share → Keep</button>
+  </div>
+  <p style="font-size:.78rem;color:var(--ink-soft);margin-top:10px">Household approvals are shared via localStorage — all family members on this device see the same meal selections.</p>
+</section>
+
+<div class="cta"><button id="ctaBtn" onclick="next()">Suggest meals →</button></div>
+<div class="toast" id="toast">Copied</div>
+
+<!-- ============ ADD-MEAL MODAL ============ -->
+<div class="modal" id="rbModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <b>Add a meal to the bank</b>
+      <button class="x" onclick="rbClose()">✕</button>
+    </div>
+    <div class="seg">
+      <button class="on" data-tab="link" onclick="rbTab('link')">🔗 From a link</button>
+      <button data-tab="type" onclick="rbTab('type')">✍️ Type it</button>
+      <button data-tab="saved" onclick="rbTab('saved')">Added (<span id="rbSavedCount">0</span>)</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- TYPE (also the review surface for imported links) -->
+      <div class="rb-pane" data-pane="type">
+        <label class="field"><span>Meal name *</span><input id="rbName" placeholder="e.g. Garlic-free Thai basil chicken"></label>
+        <label class="field"><span>Short description</span><input id="rbDesc" placeholder="What's on special, the idea…"></label>
+        <div class="field-row">
+          <label class="field"><span>Diet tags</span><input id="rbFod" value="Low FODMAP · LF · GF"></label>
+          <label class="field sm"><span>Serves</span><input id="rbServes" value="2" inputmode="numeric"></label>
+        </div>
+        <span class="field-label">Nutrition (per serve)</span>
+        <div class="nut-grid">
+          <label class="field"><span>kJ</span><input id="rbKj" inputmode="numeric"></label>
+          <label class="field"><span>Prot g</span><input id="rbProt" inputmode="numeric"></label>
+          <label class="field"><span>Fibre g</span><input id="rbFib" inputmode="numeric"></label>
+          <label class="field"><span>Carbs g</span><input id="rbCarb" inputmode="numeric"></label>
+        </div>
+        <label class="field"><span>Waste / leftovers note</span><input id="rbWaste" placeholder="e.g. carcass → stock; half the bag → next meal"></label>
+        <label class="field"><span>Method — one step per line</span><textarea id="rbMethod" rows="4" placeholder="Oven 190°C…&#10;Roast 75 min…&#10;Rest 15 min…"></textarea></label>
+
+        <div class="items-head"><span class="field-label">Ingredients</span><button type="button" class="ghost" onclick="rbAddItemRow()">+ Row</button></div>
+        <div class="itemrow-head"><span>Ingredient</span><span>Store</span><span>$ now</span><span>$ was</span><span>Note</span><span></span></div>
+        <div id="rbItems"></div>
+
+        <div class="modal-foot">
+          <button class="alt" type="button" onclick="rbClose()">Cancel</button>
+          <button type="button" onclick="rbSaveTyped()">Add to bank</button>
+        </div>
+      </div>
+
+      <!-- FROM A LINK -->
+      <div class="rb-pane show" data-pane="link">
+        <label class="field"><span>Recipe URL</span>
+          <div class="url-row">
+            <input id="rbUrl" inputmode="url" placeholder="https://www.taste.com.au/…">
+            <button type="button" id="rbFetchBtn" class="fetchbtn" onclick="rbFetchUrl()">Fetch</button>
+          </div>
+        </label>
+        <div class="warn">⚠ Imported recipes aren't FODMAP-checked or priced. After fetching, review the ingredients, set stores &amp; prices, and confirm the FODMAP tag before saving.</div>
+        <p class="rb-status" id="rbStatus"></p>
+        <details class="rb-src">
+          <summary>Source &amp; proxy settings</summary>
+          <p class="rb-note" style="margin-top:8px">A static page can't read other sites directly, so the URL is fetched through a public CORS proxy. If one fails, try another. Sites needing a login or heavy JavaScript may not import — use “Type it” for those.</p>
+          <label class="field"><span>Proxy</span>
+            <select id="rbProxy" onchange="rbSetProxy(this.value)">
+              <option value="allorigins">AllOrigins</option>
+              <option value="corsproxy">corsproxy.io</option>
+              <option value="codetabs">codetabs</option>
+            </select>
+          </label>
+        </details>
+        <p class="rb-note" style="margin-top:12px">Works best on mainstream recipe sites that publish structured data (taste.com.au, RecipeTin Eats, AllRecipes, BBC Good Food, and most others).</p>
+      </div>
+
+      <!-- SAVED -->
+      <div class="rb-pane" data-pane="saved">
+        <div id="rbSavedList"></div>
+        <p class="rb-note" style="margin-top:12px">These live in this browser and join this week's swap pool right away. To add them to the shared bank for good, copy them into <code>recipe-bank.json</code> in your repo.</p>
+        <div class="modal-foot">
+          <button class="alt" type="button" onclick="rbClose()">Close</button>
+          <button type="button" onclick="rbCopyBank()">Copy for recipe-bank.json</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   POOL loaded dynamically from thisweek.json
+   Falls back to demo data if not available
+   ============================================================ */
+
+let POOL = [];
+let METADATA = {};
+
+async function loadThisWeek() {
+  try {
+    const response = await fetch('thisweek.json');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    POOL = data.recipes || [];
+    METADATA = data.metadata || {};
+    console.log(`Loaded ${POOL.length} recipes from thisweek.json`);
+    renderMetadata();
+  } catch (e) {
+    console.warn('Could not load thisweek.json, using demo recipes:', e);
+    loadDemoData();
+  }
+  mergeCustomRecipes();
+}
+
+function loadDemoData() {
+  POOL = [
+    {id:"demo-1",name:"Demo: Roast Chicken",desc:"Placeholder until thisweek.json loads",fod:"LF",serves:2,nut:{kj:2700,prot:48,fib:7,carb:35},waste:"Demo",recipe:["Demo recipe"],items:[["Chicken","e",10,null,null]]},
+  ];
+  METADATA = {generated: new Date().toISOString(), week_start: "Demo", week_end: "Week"};
+}
+
+function renderMetadata() {
+  const el = document.getElementById('metadata-display');
+  if (METADATA.coles_url) {
+    el.innerHTML = `
+      <div><b>Coles WA Metro:</b> <a href="${METADATA.coles_url}" target="_blank" style="color:var(--coles);text-decoration:underline">View specials</a></div>
+      <div style="margin-top:4px"><b>Woolworths WA:</b> <a href="${METADATA.woolies_url}" target="_blank" style="color:var(--woolies);text-decoration:underline">View specials</a></div>
+      <div style="margin-top:4px;font-size:.7rem">Updated: ${new Date(METADATA.generated).toLocaleDateString()}</div>
+    `;
+  } else {
+    el.innerHTML = '<div>Demo week (load thisweek.json to see real meals)</div>';
+  }
+  document.getElementById('weekline').innerHTML = `
+    <span class="dot c"></span>Coles WA · <span class="dot w"></span>Woolies WA · <b>${METADATA.week_start || "this"} week</b>
+  `;
+}
+
+const STORE = {c:["Coles","var(--coles)"], w:["Woolworths","var(--woolies)"], e:["Either","var(--either)"]};
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+/* ============================================================
+   STATE: shared household approval list + localStorage
+   ============================================================ */
+
+let days = 5, defaultPpl = 2, shopDay = "Sun", step = 0;
+let plan = [];
+
+function initPlan() {
+  plan = Array.from({length:days},(_,i)=>({meal:i%Math.max(1,POOL.length), people:defaultPpl, skipped:false}));
+  loadFromLocalStorage();
+}
+
+function saveToLocalStorage() {
+  localStorage.setItem('docket_plan', JSON.stringify(plan));
+}
+
+function loadFromLocalStorage() {
+  const saved = localStorage.getItem('docket_plan');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      plan.forEach((p,i)=>{if(data[i]) Object.assign(p,data[i])});
+    } catch(e) {console.warn('localStorage load failed:', e)}
+  }
+  const sd = localStorage.getItem('docket_shopday');
+  if (sd && DAYS.includes(sd)) shopDay = sd;
+}
+
+function renderShopDay(){
+  document.querySelectorAll('#dayRow button').forEach(b=>b.classList.toggle('on', b.dataset.day===shopDay));
+}
+
+function setShopDay(d){
+  if(!DAYS.includes(d)) return;
+  shopDay = d;
+  localStorage.setItem('docket_shopday', d);
+  renderShopDay();
+  renderMeals();
+  if(step===2) renderReceipt();
+}
+
+/* ============================================================
+   UI: render & interact
+   ============================================================ */
+
+function bumpDays(n){
+  days=Math.min(7,Math.max(2,days+n));
+  if(days>plan.length) {
+    for(let i=plan.length;i<days;i++) plan.push({meal:i%Math.max(1,POOL.length),people:defaultPpl,skipped:false});
+  } else plan.length=days;
+  document.getElementById("dayCount").textContent=days;
+  saveToLocalStorage();
+  renderMeals();
+}
+
+function bumpPpl(n){
+  defaultPpl=Math.min(8,Math.max(1,defaultPpl+n));
+  document.getElementById("pplCount").textContent=defaultPpl;
+  plan.forEach(s=>s.people=defaultPpl);
+  saveToLocalStorage();
+  renderMeals();
+}
+
+const tabs=[...document.querySelectorAll("nav button")], secs=[...document.querySelectorAll("section")];
+function go(n){ step=n;
+  tabs.forEach((t,i)=>t.classList.toggle("on",i===n));
+  secs.forEach((s,i)=>s.classList.toggle("show",i===n));
+  const cta=document.getElementById("ctaBtn");
+  cta.style.display=n===2?"none":"";
+  cta.textContent=n===0?"Suggest meals →":"Build shopping list →";
+  if(n===1) renderMeals(); if(n===2) renderReceipt();
+  window.scrollTo({top:0});
+}
+tabs.forEach((t,i)=>t.onclick=()=>go(i));
+function next(){ go(step+1); }
+
+function swapMeal(i){
+  const used=new Set(plan.map(s=>s.meal));
+  for(let off=1;off<=POOL.length;off++){
+    const cand=(plan[i].meal+off)%POOL.length;
+    if(!used.has(cand)){ plan[i].meal=cand; plan[i].skipped=false; saveToLocalStorage(); renderMeals(); return; }
+  }
+  plan[i].meal=(plan[i].meal+1)%POOL.length; plan[i].skipped=false; saveToLocalStorage(); renderMeals();
+}
+
+function moveMeal(i,dir){
+  const j=i+dir; if(j<0||j>=plan.length)return;
+  [plan[i],plan[j]]=[plan[j],plan[i]]; saveToLocalStorage(); renderMeals();
+}
+
+function toggleSkip(i){ 
+  plan[i].skipped=!plan[i].skipped; 
+  saveToLocalStorage(); 
+  renderMeals(); 
+}
+
+function pplSlot(i,n){ 
+  plan[i].people=Math.min(8,Math.max(1,plan[i].people+n)); 
+  saveToLocalStorage(); 
+  renderMeals(); 
+}
+
+const mealCost=m=>m.items.reduce((s,it)=>s+it[2],0);
+const scaled=(slot,fn)=>fn(POOL[slot.meal]||{items:[]})*slot.people/2;
+const dayLabel=i=>DAYS[(DAYS.indexOf(shopDay)+i)%7];
+const kcal=kj=>Math.round(kj/4.184);
+
+function renderMeals(){
+  const wrap=document.getElementById("mealList"); wrap.innerHTML="";
+  plan.forEach((slot,i)=>{
+    if(!POOL[slot.meal]) return;
+    const m=POOL[slot.meal];
+    const cost=scaled(slot,mealCost);
+    const el=document.createElement("div");
+    el.className="meal"+(slot.skipped?" skipped":"");
+    el.innerHTML=`
+      <div class="mtop">
+        <div class="when"><div class="day">${dayLabel(i)}${i===0?" · shop day":""}</div><h3>${m.name}</h3></div>
+        <div class="order">
+          <button onclick="moveMeal(${i},-1)" ${i===0?"disabled":""}>▲</button>
+          <button onclick="moveMeal(${i},1)" ${i===plan.length-1?"disabled":""}>▼</button>
+        </div>
+      </div>
+      <p>${m.desc}</p>
+      <div class="pricerow">
+        <div class="pricebox"><b>$${cost.toFixed(2)}</b><span>meal</span></div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px">
+          <button style="width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:1.05rem;cursor:pointer" onclick="pplSlot(${i},-1)">−</button>
+          <b style="min-width:34px;text-align:center;font-size:.92rem">${slot.people}</b>
+          <button style="width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:1.05rem;cursor:pointer" onclick="pplSlot(${i},1)">+</button>
+        </div>
+      </div>
+      <div class="nutri"><div><b>${m.nut.kj}</b><span>kJ</span></div><div><b>${kcal(m.nut.kj)}</b><span>kcal</span></div><div><b>${m.nut.prot}g</b><span>prot</span></div><div><b>${m.nut.fib}g</b><span>fibre</span></div><div><b>${m.nut.carb}g</b><span>carbs</span></div></div>
+      <div class="tags">${m.specials?m.specials.map(s=>`<span class="tag ${s.store}">${STORE[s.store][0]}${s.txt?' · '+s.txt:''}</span>`).join(""):""}${m.fod?`<span class="tag fd">${m.fod}</span>`:""}${m.waste?`<span class="tag nw">♻ ${m.waste}</span>`:""}
+      </div>
+      <div class="mealbtns">
+        <button class="skipbtn ${slot.skipped?'on':''}" onclick="toggleSkip(${i})">${slot.skipped?"Skipped — tap to restore":"Skip this meal"}</button>
+        <button onclick="swapMeal(${i})">↻ Swap</button>
+        <button class="recipe" onclick="this.closest('.meal').querySelector('.recipebox').classList.toggle('open')">Recipe</button>
+      </div>
+      <div class="recipebox"><ol>${(m.recipe||[]).map(r=>`<li>${r}</li>`).join("")}</ol></div>`;
+    wrap.appendChild(el);
+  });
+  const live=plan.filter(s=>!s.skipped);
+  document.getElementById("inCount").textContent=`${live.length} of ${plan.length}`;
+  document.getElementById("runCost").textContent="$"+live.reduce((s,x)=>s+scaled(x,mealCost),0).toFixed(0);
+}
+
+function listItems(){
+  const src=plan.filter(s=>!s.skipped);
+  const map=new Map();
+  src.forEach(slot=>{
+    const f=slot.people/2;
+    (POOL[slot.meal]?.items||[]).forEach(([n,s,p,was,note])=>{
+      if(map.has(n)){ const e=map.get(n); e.p+=p*f; if(was)e.was=(e.was||0)+was*f; }
+      else map.set(n,{n,s,p:p*f,was:was?was*f:null,note});
+    });
+  });
+  return {items:[...map.values()], meals:src};
+}
+
+function renderReceipt(){
+  const {items,meals}=listItems();
+  const c_items=items.filter(i=>i.s==="c"), w_items=items.filter(i=>i.s==="w"), e_items=items.filter(i=>i.s==="e");
+  const c_total=c_items.reduce((s,i)=>s+i.p,0), w_total=w_items.reduce((s,i)=>s+i.p,0);
+  const mkgrp=(items,label)=>!items.length?"":`<div class="rgroup"><span class="gdot" style="background:${label==="Coles"?STORE.c[1]:label==="Woolworths"?STORE.w[1]:STORE.e[1]}"></span>${label}</div>${items.map((it,j)=>`<div class="ritem" id="ri-${label[0]}${j}"><input type="checkbox" id="cb-${label[0]}${j}" onchange="document.getElementById('ri-${label[0]}${j}').classList.toggle('done',this.checked)"><label for="cb-${label[0]}${j}">${it.n}${it.note?`<small>♻ ${it.note}</small>`:""}  </label><span class="pr">${it.was?`<span class="was">$${it.was.toFixed(2)}</span>`:""}${it.p?"$"+it.p.toFixed(2):"—"}</span></div>`).join("")}`;
+  document.getElementById("receipt").innerHTML=`
+    <div class="rhead"><b>THE DOCKET</b><br>${meals.length} dinners · shop ${shopDay}, meals from ${shopDay}</div>
+    ${mkgrp(c_items,"Coles")}<div style="border-top:1px dashed #ddd;margin:10px 0;padding-top:10px;font-size:.75rem;color:#999"><div><b>Coles: $${c_total.toFixed(2)}</b></div></div>
+    <div style="background:#f9faf7;border-radius:8px;padding:8px;margin:10px 0;font-size:.78rem"><b>Woolworths Online</b><br>Delivery Unlimited: ${w_total>=75?"✓":`$${(75-w_total).toFixed(2)} short`}<br>Free delivery: ${w_total>=150?"✓":`$${(150-w_total).toFixed(2)} short`}</div>
+    ${mkgrp(w_items,"Woolworths")}<div style="border-top:1px dashed #ddd;margin:10px 0;padding-top:10px;font-size:.75rem;color:#999"><div><b>Woolworths: $${w_total.toFixed(2)}</b></div></div>
+    ${mkgrp(e_items,"Either store")}<div class="rtotal"><div><span>TOTAL</span><span class="big">$${(c_total+w_total+e_items.reduce((s,i)=>s+i.p,0)).toFixed(2)}</span></div></div>`;
+}
+
+function copyList(share){
+  const {items,meals}=listItems();
+  let txt=`Shopping list — ${meals.length} dinners from ${shopDay}\n`;
+  ["c","w","e"].forEach(k=>{
+    const gs=items.filter(i=>i.s===k); if(!gs.length)return;
+    txt+=`\n${STORE[k][0]}:\n`+gs.map(i=>`☐ ${i.n}${i.p?` — $${i.p.toFixed(2)}`:""}`).join("\n")+"\n";
+  });
+  if(share && navigator.share){ navigator.share({title:"Shopping list",text:txt}).catch(()=>{}); return; }
+  navigator.clipboard.writeText(txt).then(()=>{ showToast("Copied"); });
+}
+
+/* ============================================================
+   RECIPE BANK — add meals from the page (type or paste)
+   Custom recipes persist in localStorage on this device and are
+   merged into the week's swap pool. To add them to the shared bank
+   permanently, copy the JSON into recipe-bank.json in the repo.
+   ============================================================ */
+
+const RB_KEY = 'docket_custom_recipes';
+const rbGet = () => { try { return JSON.parse(localStorage.getItem(RB_KEY)) || []; } catch(e){ return []; } };
+const rbSave = arr => localStorage.setItem(RB_KEY, JSON.stringify(arr));
+const rbNum = (v,d=0) => { const n=parseFloat(v); return isNaN(n)?d:n; };
+const rbStore = s => { s=(s||'e').toString().toLowerCase(); return s[0]==='c'?'c':s[0]==='w'?'w':'e'; };
+const rbSlug = s => (s||'').toString().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'meal';
+
+function rbUniqueId(base){
+  const taken = new Set([...POOL.map(r=>r.id), ...rbGet().map(r=>r.id)]);
+  if(!taken.has(base)) return base;
+  let n=2; while(taken.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
+
+/* coerce any loose recipe object into the bank schema; null if no name */
+function rbNormalize(o){
+  if(!o || typeof o!=='object' || Array.isArray(o)) return null;
+  const name=(o.name||'').toString().trim();
+  if(!name) return null;
+  const nut=o.nut||{};
+  let recipe=o.recipe;
+  if(typeof recipe==='string') recipe=recipe.split('\n');
+  recipe=Array.isArray(recipe)?recipe.map(s=>(s||'').toString().trim()).filter(Boolean):[];
+  let items=Array.isArray(o.items)?o.items:[];
+  items=items.map(it=>{
+    if(Array.isArray(it))
+      return [(it[0]||'').toString().trim(), rbStore(it[1]), rbNum(it[2]),
+              (it[3]==null||it[3]==='')?null:rbNum(it[3]), it[4]?it[4].toString():null];
+    if(it && typeof it==='object')
+      return [(it.name||'').toString().trim(), rbStore(it.store), rbNum(it.price),
+              (it.was==null||it.was==='')?null:rbNum(it.was), it.note?it.note.toString():null];
+    return null;
+  }).filter(it=>it && it[0]);
+  return {
+    id: o.id ? rbSlug(o.id) : rbSlug(name),
+    name,
+    desc:(o.desc||'').toString(),
+    fod:(o.fod||'').toString(),
+    serves: parseInt(o.serves)||2,
+    nut:{kj:rbNum(nut.kj), prot:rbNum(nut.prot), fib:rbNum(nut.fib), carb:rbNum(nut.carb)},
+    waste:(o.waste||'').toString(),
+    recipe, items
+  };
+}
+
+/* on load: drop saved custom recipes into the live pool (no duplicates) */
+function mergeCustomRecipes(){
+  const have=new Set(POOL.map(r=>r.id));
+  rbGet().forEach(r=>{ if(!have.has(r.id)){ POOL.push(r); have.add(r.id); } });
+}
+
+/* persist + add to live pool */
+function rbCommit(recipe){
+  recipe.id = rbUniqueId(recipe.id);
+  const custom = rbGet(); custom.push(recipe); rbSave(custom);
+  POOL.push(recipe);
+  rbRenderSaved(); renderMeals();
+}
+
+/* ---- modal plumbing ---- */
+function rbOpen(){ document.getElementById('rbModal').classList.add('open'); rbRenderSaved(); }
+function rbClose(){ document.getElementById('rbModal').classList.remove('open'); }
+function rbTab(name){
+  document.querySelectorAll('#rbModal .seg button').forEach(b=>b.classList.toggle('on', b.dataset.tab===name));
+  document.querySelectorAll('#rbModal .rb-pane').forEach(p=>p.classList.toggle('show', p.dataset.pane===name));
+}
+/* close when tapping the dim backdrop */
+document.getElementById('rbModal').addEventListener('click', e=>{ if(e.target.id==='rbModal') rbClose(); });
+
+function rbAddItemRow(item){
+  const wrap=document.getElementById('rbItems');
+  const esc=v=>(v==null?'':v.toString().replace(/"/g,'&quot;'));
+  const row=document.createElement('div');
+  row.className='itemrow';
+  row.innerHTML=`
+    <input placeholder="Ingredient" class="i-name" value="${item?esc(item[0]):''}">
+    <select class="i-store"><option value="e">Either</option><option value="c">Coles</option><option value="w">Woolies</option></select>
+    <input placeholder="now" class="i-price" inputmode="decimal" value="${item&&item[2]!=null?item[2]:''}">
+    <input placeholder="was" class="i-was" inputmode="decimal" value="${item&&item[3]!=null?item[3]:''}">
+    <input placeholder="note" class="i-note" value="${item?esc(item[4]):''}">
+    <button type="button" class="i-del" title="Remove">✕</button>`;
+  if(item) row.querySelector('.i-store').value=item[1];
+  row.querySelector('.i-del').onclick=()=>row.remove();
+  wrap.appendChild(row);
+}
+
+function rbSaveTyped(){
+  const g=id=>document.getElementById(id).value;
+  const items=[...document.querySelectorAll('#rbItems .itemrow')].map(r=>{
+    const name=r.querySelector('.i-name').value.trim();
+    if(!name) return null;
+    const was=r.querySelector('.i-was').value;
+    return [name, r.querySelector('.i-store').value, rbNum(r.querySelector('.i-price').value),
+            was===''?null:rbNum(was), r.querySelector('.i-note').value.trim()||null];
+  }).filter(Boolean);
+  const rec=rbNormalize({
+    name:g('rbName'), desc:g('rbDesc'), fod:g('rbFod'), serves:g('rbServes'),
+    nut:{kj:g('rbKj'), prot:g('rbProt'), fib:g('rbFib'), carb:g('rbCarb')},
+    waste:g('rbWaste'), recipe:g('rbMethod'), items
+  });
+  if(!rec){ showToast('Add a meal name first'); return; }
+  rbCommit(rec);
+  rbResetForm();
+  rbTab('saved');
+  showToast('Added to the bank — ↻ Swap to put it on the menu');
+}
+
+function rbResetForm(){
+  ['rbName','rbDesc','rbWaste','rbMethod','rbKj','rbProt','rbFib','rbCarb'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rbFod').value='Low FODMAP · LF · GF';
+  document.getElementById('rbServes').value='2';
+  document.getElementById('rbItems').innerHTML='';
+  rbAddItemRow(); rbAddItemRow();
+  const px=document.getElementById('rbProxy'); if(px) px.value=rbProxyId();
+}
+
+/* ---- import from a URL ----------------------------------------
+   Static page → fetch the page via a public CORS proxy, then read
+   the schema.org Recipe (JSON-LD) most recipe sites embed. Result
+   prefills the "Type it" form for review (stores, prices, FODMAP). */
+
+const RB_PROXY_KEY='docket_proxy';
+const RB_PROXIES=[
+  {id:'allorigins', label:'AllOrigins', wrap:u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u)},
+  {id:'corsproxy',  label:'corsproxy.io', wrap:u=>'https://corsproxy.io/?url='+encodeURIComponent(u)},
+  {id:'codetabs',   label:'codetabs', wrap:u=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(u)},
+];
+const rbProxyId=()=>localStorage.getItem(RB_PROXY_KEY)||'allorigins';
+function rbSetProxy(v){ localStorage.setItem(RB_PROXY_KEY,v); }
+function rbStatus(msg){ const el=document.getElementById('rbStatus'); if(el) el.textContent=msg||''; }
+
+/* --- tiny pure helpers for reading messy JSON-LD --- */
+function rbDecode(s){
+  return String(s)
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+    .replace(/&quot;/g,'"').replace(/&#0?39;|&apos;|&#x27;/gi,"'").replace(/&nbsp;/g,' ')
+    .replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(+n))
+    .replace(/&#x([0-9a-f]+);/gi,(_,n)=>String.fromCharCode(parseInt(n,16)));
+}
+function rbClean(s){
+  if(s==null) return '';
+  return rbDecode(String(s).replace(/<[^>]*>/g,' ')).replace(/\s+/g,' ').trim();
+}
+function rbFirst(v){
+  if(v==null) return '';
+  if(Array.isArray(v)) return rbFirst(v[0]);
+  if(typeof v==='object') return rbFirst(v['@value']!=null?v['@value']:v.text!=null?v.text:v.name!=null?v.name:v.url);
+  return String(v);
+}
+function rbNumFrom(s){ const m=String(s==null?'':s).replace(/,/g,'').match(/-?\d+(\.\d+)?/); return m?parseFloat(m[0]):0; }
+function rbTypeIsRecipe(t){ return (Array.isArray(t)?t:[t]).some(x=>String(x).toLowerCase()==='recipe'); }
+
+function rbCollectLd(data,out){
+  if(Array.isArray(data)){ data.forEach(d=>rbCollectLd(d,out)); return; }
+  if(data && typeof data==='object'){
+    if(Array.isArray(data['@graph'])) data['@graph'].forEach(d=>rbCollectLd(d,out));
+    out.push(data);
+  }
+}
+function rbExtractJsonLd(html){
+  const out=[];
+  const re=/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m;
+  while((m=re.exec(html))){
+    const raw=m[1].trim(); if(!raw) continue;
+    try { rbCollectLd(JSON.parse(raw), out); } catch(e){ /* skip malformed block */ }
+  }
+  return out;
+}
+function rbFlattenSteps(ri){
+  const out=[]; const push=t=>{ t=rbClean(t); if(t) out.push(t); };
+  const walk=node=>{
+    if(node==null) return;
+    if(typeof node==='string'){ node.split(/\r?\n+/).forEach(push); return; }
+    if(Array.isArray(node)){ node.forEach(walk); return; }
+    if(typeof node==='object'){
+      if(node.itemListElement) return walk(node.itemListElement);
+      if(node.steps) return walk(node.steps);
+      if(node.text!=null) return push(rbFirst(node.text));
+      if(node.name!=null) return push(rbFirst(node.name));
+    }
+  };
+  walk(ri); return out;
+}
+
+/* build a loose recipe object (for the form) from JSON-LD nodes */
+function rbRecipeFromNodes(nodes,url){
+  const node=nodes.find(n=>n && rbTypeIsRecipe(n['@type']));
+  if(!node) return null;
+  const ings=(Array.isArray(node.recipeIngredient)?node.recipeIngredient
+            :Array.isArray(node.ingredients)?node.ingredients
+            :node.recipeIngredient?[node.recipeIngredient]:[])
+            .map(s=>rbClean(rbFirst(s))).filter(Boolean);
+  const steps=rbFlattenSteps(node.recipeInstructions);
+  const n=node.nutrition||{};
+  const kcal=rbNumFrom(rbFirst(n.calories));
+  return {
+    name: rbClean(rbFirst(node.name)),
+    desc: rbClean(rbFirst(node.description)),
+    fod: '⚠ check FODMAP',
+    serves: parseInt(rbFirst(node.recipeYield))||2,
+    nut:{ kj: kcal?Math.round(kcal*4.184):0, prot:rbNumFrom(rbFirst(n.proteinContent)),
+          fib:rbNumFrom(rbFirst(n.fiberContent)), carb:rbNumFrom(rbFirst(n.carbohydrateContent)) },
+    waste: '',
+    recipe: steps,
+    items: ings.map(i=>[i,'e',null,null,null]),
+    _source: url
+  };
+}
+
+/* fallback for pages without JSON-LD: try OG title + common ingredient nodes */
+function rbRecipeFromDom(html){
+  let doc; try{ doc=new DOMParser().parseFromString(html,'text/html'); }catch(e){ return null; }
+  const q=sel=>[...doc.querySelectorAll(sel)].map(el=>rbClean(el.textContent)).filter(Boolean);
+  const ings=q('[itemprop="recipeIngredient"],[itemprop="ingredients"],li.ingredient,.ingredient,.wprm-recipe-ingredient');
+  if(!ings.length) return null;
+  const steps=q('[itemprop="recipeInstructions"] li,[itemprop="recipeInstructions"] p,.instructions li,.method li,.wprm-recipe-instruction-text');
+  const og=doc.querySelector('meta[property="og:title"]');
+  const name=rbClean(og?og.getAttribute('content'):(doc.querySelector('h1')?.textContent||''));
+  return { name, desc:'', fod:'⚠ check FODMAP', serves:2,
+           nut:{kj:0,prot:0,fib:0,carb:0}, waste:'',
+           recipe:steps, items:ings.map(i=>[i,'e',null,null,null]) };
+}
+
+function rbParseRecipeHTML(html,url){
+  return rbRecipeFromNodes(rbExtractJsonLd(html),url) || rbRecipeFromDom(html);
+}
+
+async function rbFetchHtml(url){
+  const pref=rbProxyId();
+  const order=[RB_PROXIES.find(p=>p.id===pref), ...RB_PROXIES.filter(p=>p.id!==pref)].filter(Boolean);
+  let lastErr;
+  for(const p of order){
+    try{
+      rbStatus('Trying '+p.label+'…');
+      const res=await fetch(p.wrap(url));
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const text=await res.text();
+      if(!text || text.length<200) throw new Error('empty response');
+      return text;
+    }catch(e){ lastErr=e; }
+  }
+  throw lastErr||new Error('all proxies failed');
+}
+
+async function rbFetchUrl(){
+  let url=document.getElementById('rbUrl').value.trim();
+  if(!url){ rbStatus('Paste a recipe link first.'); return; }
+  if(!/^https?:\/\//i.test(url)) url='https://'+url;
+  const btn=document.getElementById('rbFetchBtn'); const label=btn.textContent;
+  btn.disabled=true; btn.textContent='Fetching…';
+  try{
+    const html=await rbFetchHtml(url);
+    const rec=rbParseRecipeHTML(html,url);
+    if(!rec || (!rec.items.length && !rec.name)){
+      rbStatus('Couldn’t find a recipe on that page. Try a different link, switch proxy under “Source”, or use “Type it”.');
+      return;
+    }
+    rbFillForm(rec);
+    rbTab('type');
+    rbStatus('');
+    showToast('Imported — review stores, prices & FODMAP');
+  }catch(e){
+    rbStatus('Fetch failed ('+e.message+'). The site may block proxies or need a login — try another proxy under “Source”, or enter it manually in “Type it”.');
+  }finally{
+    btn.disabled=false; btn.textContent=label;
+  }
+}
+
+/* drop a parsed/loose recipe into the Type-it form for review */
+function rbFillForm(rec){
+  const set=(id,v)=>{ document.getElementById(id).value=(v==null||v===0?'':v); };
+  set('rbName',rec.name); set('rbDesc',rec.desc);
+  document.getElementById('rbFod').value=rec.fod||'⚠ check FODMAP';
+  document.getElementById('rbServes').value=rec.serves||2;
+  set('rbKj',rec.nut?.kj); set('rbProt',rec.nut?.prot); set('rbFib',rec.nut?.fib); set('rbCarb',rec.nut?.carb);
+  set('rbWaste',rec.waste);
+  document.getElementById('rbMethod').value=(rec.recipe||[]).join('\n');
+  const wrap=document.getElementById('rbItems'); wrap.innerHTML='';
+  (rec.items||[]).forEach(it=>rbAddItemRow(it));
+  if(!wrap.children.length){ rbAddItemRow(); rbAddItemRow(); }
+}
+
+function rbDelete(id){
+  rbSave(rbGet().filter(r=>r.id!==id));
+  const i=POOL.findIndex(r=>r.id===id);
+  if(i>-1) POOL.splice(i,1);
+  plan.forEach(s=>{ if(s.meal>=POOL.length) s.meal=0; });
+  saveToLocalStorage();
+  rbRenderSaved(); renderMeals();
+}
+
+function rbRenderSaved(){
+  const wrap=document.getElementById('rbSavedList');
+  const custom=rbGet();
+  document.getElementById('rbSavedCount').textContent=custom.length;
+  if(!custom.length){ wrap.innerHTML='<p class="rb-note">Nothing added on this device yet. Meals you add here join this week\u2019s swap pool right away.</p>'; return; }
+  wrap.innerHTML=custom.map(r=>`
+    <div class="rb-saved">
+      <div><b>${r.name}</b><small>${r.items.length} item${r.items.length===1?'':'s'} · ${r.recipe.length} step${r.recipe.length===1?'':'s'}</small></div>
+      <button type="button" onclick="rbDelete('${r.id}')" title="Remove">🗑</button>
+    </div>`).join('');
+}
+
+function rbCopyBank(){
+  const custom=rbGet();
+  if(!custom.length){ showToast('Nothing to copy yet'); return; }
+  navigator.clipboard.writeText(JSON.stringify(custom,null,2)).then(()=>showToast('Copied — paste into recipe-bank.json'));
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+
+window.addEventListener('DOMContentLoaded', async ()=>{
+  await loadThisWeek();
+  initPlan();
+  renderMeals();
+  renderShopDay();
+  rbResetForm();
+});
+</script>
+</body>
+</html>
