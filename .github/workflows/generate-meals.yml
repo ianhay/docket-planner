@@ -46,6 +46,16 @@ jobs:
         GITHUB_EMAIL: ${{ secrets.COMMIT_EMAIL || 'docket-bot@example.com' }}
         COLES_SALEID: ${{ inputs.coles_saleid || '66019' }}
         WOOLIES_SALEID: ${{ inputs.woolies_saleid || '66046' }}
+        # --- SaleFinder API IDs (Settings -> Secrets and variables -> Actions -> Variables) ---
+        # catalogue id changes WEEKLY; retailer/location are fixed per store+region.
+        COLES_CATALOGUE_ID: ${{ vars.COLES_CATALOGUE_ID || '66233' }}
+        COLES_RETAILER_ID: ${{ vars.COLES_RETAILER_ID || '148' }}
+        COLES_LOCATION_ID: ${{ vars.COLES_LOCATION_ID || '9045' }}
+        COLES_TOKEN: ${{ secrets.COLES_TOKEN }}
+        WOOLIES_CATALOGUE_ID: ${{ vars.WOOLIES_CATALOGUE_ID || '66367' }}
+        WOOLIES_RETAILER_ID: ${{ vars.WOOLIES_RETAILER_ID || '126' }}
+        WOOLIES_LOCATION_ID: ${{ vars.WOOLIES_LOCATION_ID || '22287' }}
+        WOOLIES_TOKEN: ${{ secrets.WOOLIES_TOKEN }}
         REPO_PATH: ${{ github.workspace }}
       run: python3 generate-thisweek.py
     
