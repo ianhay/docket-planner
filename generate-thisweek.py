@@ -93,6 +93,8 @@ def fetch_catalogue_with_playwright(url: str, store_name: str) -> List[Dict]:
                             "product": name,
                             "price": price,
                             "was_price": was_price,
+                            "price_text": price_text,
+                            "unit": detect_unit(price_text),
                             "store": store_name.lower()
                         })
                 except:
@@ -141,6 +143,9 @@ def fetch_catalogue_fallback(url: str, store_name: str) -> List[Dict]:
                         items.append({
                             "product": name,
                             "price": price,
+                            "was_price": None,
+                            "price_text": price_text,
+                            "unit": detect_unit(price_text),
                             "store": store_name.lower()
                         })
         except ImportError:
@@ -157,6 +162,23 @@ def parse_price(price_str: str) -> float:
     import re
     match = re.search(r'\$(\d+\.?\d*)', price_str)
     return float(match.group(1)) if match else None
+
+def detect_unit(price_str: str):
+    """
+    Detect the pricing basis from the raw price text so prices can be scaled
+    to a recipe's quantity. Returns 'kg', '100g', 'ea', or None (flat/pack).
+    e.g. '$18.00 / kg' -> 'kg';  '$18.00kg' -> 'kg';  '$3.50 ea' -> 'ea';
+         '$2.00 pkg' -> None;    '$5.00' -> None
+    """
+    import re
+    t = (price_str or "").lower()
+    if re.search(r'\b100\s*g\b', t):
+        return "100g"
+    if re.search(r'(?<![a-z])kg\b', t):   # lookbehind rejects 'pkg'/'package'
+        return "kg"
+    if re.search(r'\b(ea|each)\b', t):
+        return "ea"
+    return None
 
 def fetch_catalogue(url: str, store_name: str) -> List[Dict]:
     """
@@ -279,8 +301,155 @@ def select_weekly_meals(recipe_bank: List[Dict], specials: Dict, count: int = 12
     
     return selected
 
+# ============ LIVE PRICE MERGE ============
+import re as _re
+
+# words that aren't useful for matching an ingredient to a catalogue product
+_STOP = set("""the a an of and or with in on for to fresh light free onion drained
+weight half can pack bag bags bunch bunches head heads jar bottle tin tinned canned
+roast diced minced fillet fillets piece pieces approx each whole""".split())
+
+_QTY_TOKEN = _re.compile(r'(\d+\.?\d*\s*(kg|g|ml|l)\b|[\u00d7x]\s*\d+|\(.*?\))', _re.I)
+
+def _content_tokens(name: str):
+    """Significant words from an item/product name (drops sizes, units, fillers)."""
+    s = _QTY_TOKEN.sub(' ', (name or '').lower())
+    s = _re.sub(r"[^a-z ]", ' ', s)
+    return {w for w in s.split() if len(w) > 2 and w not in _STOP}
+
+def parse_item_quantity(name: str):
+    """
+    Pull the quantity a recipe item calls for.
+    Returns {'grams': float|None, 'count': int|None, 'ml': float|None}.
+    'Pork belly 500g' -> grams 500;  'Chicken drumsticks 2kg pack' -> grams 2000;
+    'Carrots x4' -> count 4;  'Coconut milk 200mL' -> ml 200.
+    """
+    s = (name or '').lower()
+    kg = _re.search(r'(\d+\.?\d*)\s*kg', s)
+    g  = _re.search(r'(\d+\.?\d*)\s*g(?![a-z])', s)
+    ml = _re.search(r'(\d+\.?\d*)\s*ml', s)
+    cnt = _re.search(r'[\u00d7x]\s*(\d+)', s)
+    grams = float(kg.group(1)) * 1000 if kg else (float(g.group(1)) if g else None)
+    return {
+        "grams": grams,
+        "count": int(cnt.group(1)) if cnt else None,
+        "ml": float(ml.group(1)) if ml else None,
+    }
+
+def _store_code(scraped_store: str) -> str:
+    s = (scraped_store or '').lower()
+    if s.startswith('col'): return 'c'
+    if s.startswith('wool'): return 'w'
+    return 'e'
+
+def compute_scaled_price(qty: Dict, scraped: Dict):
+    """
+    Scale a catalogue price to the recipe's quantity.
+    Returns (price, was, basis) or None if it can't be done reliably.
+    """
+    unit = scraped.get("unit")
+    price = scraped.get("price")
+    was = scraped.get("was_price")
+    if price is None:
+        return None
+    grams = qty["grams"]
+
+    if unit in ("kg", "100g") and grams:
+        factor = grams / (1000.0 if unit == "kg" else 100.0)
+        return (round(price * factor, 2),
+                round(was * factor, 2) if was else None,
+                f"{unit} x {grams:g}g")
+
+    # flat price (pack) or per-each with no weight info: use as-is, best effort
+    if unit in (None, "ea"):
+        return (round(price, 2), round(was, 2) if was else None, unit or "pack")
+
+    # per-kg price but the recipe is a count/volume we can't convert -> don't guess
+    return None
+
+def _set_status(item: list, status: str):
+    """Append a 6th element ('live'|'est') without disturbing the 5-field shape the planner reads."""
+    if len(item) >= 6:
+        item[5] = status
+    else:
+        item.append(status)
+
+def merge_live_prices(recipes: List[Dict], all_items: List[Dict]):
+    """
+    Overwrite each recipe item's price with this week's catalogue price where a
+    confident match exists, scaling per-kg prices to the item's quantity. Items
+    with no match keep their bank price and are flagged 'est'. Returns
+    (recipes, stats).
+    """
+    pool = []
+    for it in all_items:
+        pool.append({
+            "product": it.get("product", ""),
+            "price": it.get("price"),
+            "was_price": it.get("was_price"),
+            "unit": it.get("unit"),
+            "code": _store_code(it.get("store", "")),
+            "toks": _content_tokens(it.get("product", "")),
+        })
+
+    stats = {"matched": 0, "total": 0, "scraped": len(all_items)}
+
+    for r in recipes:
+        specials = []
+        for item in r.get("items", []):
+            stats["total"] += 1
+            name = item[0]
+            store = item[1] if len(item) > 1 else 'e'
+            rtok = _content_tokens(name)
+            if not rtok:
+                _set_status(item, "est")
+                continue
+            need = 2 if len(rtok) >= 2 else 1
+
+            best, best_shared = None, 0
+            for sc in pool:
+                if store != 'e' and sc["code"] != store:
+                    continue
+                shared = len(rtok & sc["toks"])
+                if shared >= need and shared > best_shared:
+                    best, best_shared = sc, shared
+
+            if not best:
+                _set_status(item, "est")
+                continue
+
+            res = compute_scaled_price(parse_item_quantity(name), best)
+            if not res:
+                _set_status(item, "est")
+                continue
+
+            price, was, _basis = res
+            # pad item to at least 5 fields, then update price/was
+            while len(item) < 5:
+                item.append(None)
+            item[2] = price
+            item[3] = was
+            _set_status(item, "live")
+            stats["matched"] += 1
+
+            if was and price and was > price:
+                specials.append({"store": store, "txt": "on special"})
+
+        if specials:
+            # de-dupe, cap to keep the planner's tag row tidy
+            seen = set()
+            uniq = []
+            for sp in specials:
+                key = (sp["store"], sp["txt"])
+                if key not in seen:
+                    seen.add(key)
+                    uniq.append(sp)
+            r["specials"] = uniq[:3]
+
+    return recipes, stats
+
 # ============ JSON GENERATION ============
-def generate_thisweek_json(selected_recipes: List[Dict], coles_saleid: str, woolies_saleid: str, approved: bool = False) -> Dict:
+def generate_thisweek_json(selected_recipes: List[Dict], coles_saleid: str, woolies_saleid: str, approved: bool = False, price_stats: Dict = None) -> Dict:
     """
     Generate the thisweek.json structure that the planner will load.
     
@@ -294,7 +463,16 @@ def generate_thisweek_json(selected_recipes: List[Dict], coles_saleid: str, wool
     # Shuffle recipes to a default order (optional: randomize or keep scored order)
     # For now, keep top 12 in scored order
     meals = selected_recipes[:12]
-    
+
+    ps = price_stats or {"matched": 0, "total": 0, "scraped": 0}
+    if ps["scraped"] == 0:
+        note = ("Catalogue scrape returned no items this week — all prices are typical "
+                "bank estimates. Check the run log / selectors.")
+    else:
+        note = (f"Prices: {ps['matched']} of {ps['total']} items updated from this week's "
+                f"catalogue ({ps['scraped']} specials scanned); the rest use typical bank "
+                f"prices. Items flagged 'est' are not live.")
+
     return {
         "metadata": {
             "generated": now.isoformat(),
@@ -304,7 +482,10 @@ def generate_thisweek_json(selected_recipes: List[Dict], coles_saleid: str, wool
             "coles_url": f"https://www.coles.com.au/catalogues/view#view=list&saleId={coles_saleid}&areaName=c-wa-met",
             "woolies_saleid": woolies_saleid,
             "woolies_url": f"https://www.woolworths.com.au/shop/catalogue/view#view=list&saleId={woolies_saleid}&areaName=WA",
-            "note": "Real prices read from catalogues; items marked ~ are everyday/estimated",
+            "note": note,
+            "price_matched": ps["matched"],
+            "price_total": ps["total"],
+            "scraped_items": ps["scraped"],
             "review_pending": not approved,
             "review_message": "⚠️ New meals generated! Household can review, skip, or swap meals below. Once at least 4 meals are approved, you're ready to shop."
         },
@@ -387,8 +568,13 @@ def main():
         print(f"    {i}. {recipe.get('name')}")
     if len(selected) > 5:
         print(f"    ... and {len(selected) - 5} more")
-    
-    thisweek_json = generate_thisweek_json(selected, COLES_SALEID, WOOLIES_SALEID)
+
+    print(f"\n[4b/5] Merging live catalogue prices...")
+    selected, price_stats = merge_live_prices(selected, all_items)
+    print(f"  Updated {price_stats['matched']} of {price_stats['total']} items "
+          f"from {price_stats['scraped']} scraped specials")
+
+    thisweek_json = generate_thisweek_json(selected, COLES_SALEID, WOOLIES_SALEID, price_stats=price_stats)
     
     print(f"\n[5/5] Pushing to GitHub...")
     success = push_to_github(thisweek_json, GITHUB_TOKEN, GITHUB_REPO, GITHUB_EMAIL)
