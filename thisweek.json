@@ -1,16 +1,16 @@
 {
   "metadata": {
-    "generated": "2026-06-29T10:46:25.307647",
+    "generated": "2026-06-29T12:41:25.451228",
     "week_start": "Wed 10",
     "week_end": "Tue 16",
     "coles_saleid": "66019",
     "coles_url": "https://www.coles.com.au/catalogues/view#view=list&saleId=66019&areaName=c-wa-met",
     "woolies_saleid": "66046",
     "woolies_url": "https://www.woolworths.com.au/shop/catalogue/view#view=list&saleId=66046&areaName=WA",
-    "note": "Catalogue scrape returned no items this week \u2014 all prices are typical bank estimates. Check the run log / selectors.",
-    "price_matched": 0,
-    "price_total": 40,
-    "scraped_items": 0,
+    "note": "Prices: 11 of 38 items updated from this week's catalogue (554 specials scanned); the rest use typical bank prices. Items flagged 'est' are not live.",
+    "price_matched": 11,
+    "price_total": 38,
+    "scraped_items": 554,
     "review_pending": true,
     "review_message": "\u26a0\ufe0f New meals generated! Household can review, skip, or swap meals below. Once at least 4 meals are approved, you're ready to shop."
   },
@@ -37,18 +37,18 @@
         [
           "Raw banana prawns 400g",
           "c",
-          7.6,
+          19.0,
           null,
           null,
-          "est"
+          "live"
         ],
         [
           "Coles light soy 500mL",
           "c",
-          3.0,
+          15.0,
           null,
           "pantry \u2014 lasts months",
-          "est"
+          "live"
         ],
         [
           "Ginger knob",
@@ -56,96 +56,6 @@
           1.2,
           null,
           "keeps weeks",
-          "est"
-        ]
-      ]
-    },
-    {
-      "id": "beef-braise-mash",
-      "name": "Slow-braised oyster blade & mash",
-      "desc": "Coles oyster blade $3 off \u2014 the right cut for a winter braise. Woolies diced tomatoes $1.10/can.",
-      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
-      "serves": 2,
-      "nut": {
-        "kj": 2540,
-        "prot": 44,
-        "fib": 6,
-        "carb": 30
-      },
-      "waste": "Uses carrot-bag remainder; both tomato cans fully used; freezes well",
-      "recipe": [
-        "Brown 500g oyster blade chunks hard in batches; set aside.",
-        "Carrots + 2 cans diced tomatoes + 1 cup water + rosemary + balsamic; beef back in.",
-        "Lid on, 160\u00b0C oven 2.5 hrs. Mash potatoes with olive oil."
-      ],
-      "items": [
-        [
-          "Beef oyster blade 500g",
-          "c",
-          12.0,
-          15.0,
-          null,
-          "est"
-        ],
-        [
-          "Woolworths diced tomatoes 400g \u00d72",
-          "w",
-          2.2,
-          null,
-          "both cans used",
-          "est"
-        ],
-        [
-          "Rosemary, fresh",
-          "e",
-          3.0,
-          null,
-          "dries well",
-          "est"
-        ]
-      ]
-    },
-    {
-      "id": "peking-duck-orange",
-      "name": "Peking duck legs with orange & potatoes",
-      "desc": "Luv-a-Duck Peking legs on special \u2014 pre-cooked. WA navel oranges $3.50/kg.",
-      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
-      "serves": 2,
-      "nut": {
-        "kj": 2820,
-        "prot": 36,
-        "fib": 4,
-        "carb": 32
-      },
-      "waste": "Legs are a sealed two-serve pack; orange zest + juice both used",
-      "recipe": [
-        "Duck legs per pack, 200\u00b0C ~25 min until skin crisps.",
-        "Pan sauce: juice + zest of 1 orange, splash soy, 1 tsp maple, reduce.",
-        "Roast potatoes from shared bag alongside; orange segments in a leafy salad."
-      ],
-      "items": [
-        [
-          "Luv-a-Duck Peking duck legs 650g",
-          "w",
-          10.0,
-          null,
-          null,
-          "est"
-        ],
-        [
-          "WA navel oranges \u00d72",
-          "e",
-          1.75,
-          null,
-          "$3.50/kg both stores",
-          "est"
-        ],
-        [
-          "Potatoes (from shared bag)",
-          "e",
-          0,
-          null,
-          "allocate 200g",
           "est"
         ]
       ]
@@ -232,10 +142,10 @@
         [
           "Lemon \u00d71",
           "e",
-          0.7,
+          42.0,
           null,
           null,
-          "est"
+          "live"
         ]
       ]
     },
@@ -261,26 +171,26 @@
         [
           "Whole chicken ~1.7kg",
           "w",
-          6.8,
-          11.9,
+          5.0,
+          null,
           "carcass \u2192 stock",
-          "est"
+          "live"
         ],
         [
           "WA white potatoes 2kg bag",
           "e",
-          6.0,
+          4.0,
           null,
           "shared 3 meals",
-          "est"
+          "live"
         ],
         [
           "Carrots \u00d74",
           "e",
-          1.6,
+          1.7,
           null,
           "half now, half for braise",
-          "est"
+          "live"
         ],
         [
           "Thyme, fresh",
@@ -314,10 +224,10 @@
         [
           "Chicken breast 450g",
           "c",
-          7.2,
+          15.0,
           null,
           null,
-          "est"
+          "live"
         ],
         [
           "Bok choy \u00d72",
@@ -367,10 +277,10 @@
         [
           "Pork shoulder 450g",
           "w",
-          8.1,
+          14.4,
           null,
           null,
-          "est"
+          "live"
         ],
         [
           "Granny Smith apples \u00d73",
@@ -391,10 +301,10 @@
         [
           "Potatoes (from shared bag)",
           "e",
-          0,
+          4.5,
           null,
           "allocate 250g",
-          "est"
+          "live"
         ]
       ]
     },
@@ -420,10 +330,10 @@
         [
           "Chicken breast 300g",
           "c",
-          4.8,
+          15.0,
           null,
           null,
-          "est"
+          "live"
         ],
         [
           "Lemongrass paste jar (or dried)",
@@ -581,6 +491,80 @@
           "c",
           6.0,
           12.0,
+          null,
+          "est"
+        ]
+      ]
+    },
+    {
+      "id": "salmon-broccolini-mash",
+      "name": "Salmon, broccolini & smashed potatoes",
+      "desc": "Tassie salmon skin-on $4/kg off at Coles. Broccolini $2.30 a bunch.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2420,
+        "prot": 38,
+        "fib": 6,
+        "carb": 26
+      },
+      "waste": "Potatoes from shared bag; broccolini stems \u2192 stir-fry",
+      "recipe": [
+        "Boil potatoes 12 min, smash, crisp in olive oil.",
+        "Pan-sear 2 salmon portions (~400g) skin-down 4 min, flip 2 min.",
+        "Char broccolini in same pan, splash soy + lemon."
+      ],
+      "items": [
+        [
+          "Salmon skin-on ~400g",
+          "c",
+          36.0,
+          null,
+          null,
+          "live"
+        ],
+        [
+          "Broccolini \u00d72 bunches",
+          "w",
+          4.6,
+          null,
+          "stems \u2192 stir-fry",
+          "est"
+        ]
+      ]
+    },
+    {
+      "id": "japanese-teriyaki-salmon",
+      "name": "Japanese teriyaki salmon & steamed rice",
+      "desc": "Salmon on special. Teriyaki glaze (soy + maple + ginger), served with steamed bok choy.",
+      "fod": "Low FODMAP \u00b7 LF \u00b7 GF",
+      "serves": 2,
+      "nut": {
+        "kj": 2580,
+        "prot": 40,
+        "fib": 4,
+        "carb": 44
+      },
+      "waste": "Glaze ingredients all pantry staples",
+      "recipe": [
+        "Glaze: 3 tbsp soy + 2 tbsp maple + 1 tsp ginger paste + 1 tsp garlic-infused oil.",
+        "Brush over 2 salmon portions (~400g); bake 200\u00b0C 12 min.",
+        "Steam bok choy alongside; drizzle extra glaze over rice."
+      ],
+      "items": [
+        [
+          "Salmon portions 400g",
+          "w",
+          14.4,
+          null,
+          null,
+          "est"
+        ],
+        [
+          "Bok choy \u00d72",
+          "e",
+          3.0,
+          null,
           null,
           "est"
         ]
