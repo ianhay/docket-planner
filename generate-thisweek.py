@@ -18,6 +18,7 @@ OUTPUT: thisweek.json pushed to GitHub with this week's 12-15 meals
 import json
 import os
 import sys
+import html
 import subprocess
 from datetime import datetime
 from typing import Dict, List
@@ -180,22 +181,126 @@ def detect_unit(price_str: str):
         return "ea"
     return None
 
+# ============ SALEFINDER API (primary source) ============
+# Coles & Woolworths publish their weekly catalogues via SaleFinder. The
+# svgData endpoint returns structured JSON: every product's name + sale price.
+# Each store needs three IDs (grab them from the catalogue page's Network tab):
+#   - catalogueId : changes WEEKLY (the current flyer's id), e.g. 66233
+#   - retailerId  : fixed per retailer, e.g. Coles WA = 148
+#   - locationId  : fixed per region,   e.g. WA Metro = 9045
+# Optional token may or may not be required (test the URL without it).
+SALEFINDER = {
+    "coles": {
+        "catalogue": os.getenv("COLES_CATALOGUE_ID", ""),
+        "retailer":  os.getenv("COLES_RETAILER_ID", ""),
+        "location":  os.getenv("COLES_LOCATION_ID", ""),
+        "token":     os.getenv("COLES_TOKEN", ""),
+    },
+    "woolworths": {
+        "catalogue": os.getenv("WOOLIES_CATALOGUE_ID", ""),
+        "retailer":  os.getenv("WOOLIES_RETAILER_ID", ""),
+        "location":  os.getenv("WOOLIES_LOCATION_ID", ""),
+        "token":     os.getenv("WOOLIES_TOKEN", ""),
+    },
+}
+
+def _strip_jsonp(text: str):
+    """SaleFinder may wrap JSON in a JSONP callback: jQuery123({...}). Unwrap it."""
+    s = text.strip()
+    if not s.startswith("{"):
+        i, j = s.find('('), s.rfind(')')
+        if i != -1 and j != -1 and j > i:
+            s = s[i + 1:j]
+    return json.loads(s)
+
+def _sf_price(v):
+    if v is None:
+        return None
+    import re
+    m = re.search(r'\d+\.?\d*', str(v).replace(',', ''))
+    return float(m.group(0)) if m else None
+
+def parse_salefinder_svgdata(data: Dict, store_name: str) -> List[Dict]:
+    """
+    Pull products out of a SaleFinder svgData response. The 'catalogue' array
+    holds pages; real products are the dict values that carry an 'itemName' and
+    'lowestPrice' (category-nav links have 'itemText' instead, so they're skipped).
+    """
+    items = []
+    for page in data.get("catalogue", []):
+        if not isinstance(page, dict):
+            continue
+        for v in page.values():
+            if isinstance(v, dict) and "itemName" in v and v.get("lowestPrice") not in (None, ""):
+                name = html.unescape(str(v["itemName"])).strip()
+                price = _sf_price(v["lowestPrice"])
+                if name and price:
+                    items.append({
+                        "product": name,
+                        "price": price,
+                        "was_price": None,   # svgData gives sale price only
+                        "price_text": "",    # no per-unit text in svgData
+                        "unit": None,        # -> treated as a flat/advertised price
+                        "store": store_name.lower(),
+                    })
+    return items
+
+def fetch_catalogue_salefinder(store_name: str) -> List[Dict]:
+    """Fetch + parse the SaleFinder catalogue for a store. Returns [] if unconfigured/failed."""
+    cfg = SALEFINDER.get(store_name.lower(), {})
+    cat, ret, loc = cfg.get("catalogue"), cfg.get("retailer"), cfg.get("location")
+    if not (cat and ret and loc):
+        print(f"  [SaleFinder] {store_name}: not configured (need catalogue/retailer/location IDs) — skipping.")
+        return []
+    params = {
+        "format": "json",
+        "pagetype": "catalogue2",
+        "retailerId": ret,
+        "locationId": loc,
+        "saleGroup": os.getenv("SF_SALEGROUP", "0"),
+        "size": "518",
+    }
+    if cfg.get("token"):
+        params["token"] = cfg["token"]
+    url = f"https://embed.salefinder.com.au/catalogue/svgData/{cat}/"
+    try:
+        print(f"  [SaleFinder] {store_name}: requesting catalogue {cat}...")
+        resp = requests.get(url, params=params, timeout=20, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+            "Referer": "https://embed.salefinder.com.au/",
+        })
+        resp.raise_for_status()
+        data = _strip_jsonp(resp.text)
+        items = parse_salefinder_svgdata(data, store_name)
+        print(f"  [SaleFinder] {store_name}: {len(items)} products extracted")
+        return items
+    except Exception as e:
+        print(f"  [SaleFinder] {store_name}: failed ({e}) — falling back.")
+        return []
+
 def fetch_catalogue(url: str, store_name: str) -> List[Dict]:
     """
-    Fetch catalogue using browser automation (Playwright) if available,
-    otherwise fall back to static HTML parsing.
+    Fetch this week's catalogue specials.
+
+    Primary path: SaleFinder JSON API (Coles & Woolworths both use SaleFinder).
+    This returns clean structured data — every product's name + sale price — in
+    one request, with no HTML scraping or browser automation. Falls back to the
+    old Playwright/static scrapers only if SaleFinder isn't configured or fails.
     """
-    # Try Playwright first (best for JavaScript-heavy sites)
+    sf = fetch_catalogue_salefinder(store_name)
+    if sf:
+        return sf
+
+    # Fallbacks (legacy scrapers) — only reached if SaleFinder returns nothing.
     items = fetch_catalogue_with_playwright(url, store_name)
     if items:
         return items
-    
-    # Fall back to static parsing
+
     print(f"  [!] Playwright unavailable, trying static parsing...")
     items = fetch_catalogue_fallback(url, store_name)
     if items:
         return items
-    
+
     print(f"  [!] Unable to fetch {store_name} catalogue automatically.")
     print(f"  [!] Falling back to recipe bank matching on generic protein types.")
     return []
