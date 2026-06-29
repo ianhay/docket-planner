@@ -278,6 +278,149 @@ def fetch_catalogue_salefinder(store_name: str) -> List[Dict]:
         print(f"  [SaleFinder] {store_name}: failed ({e}) — falling back.")
         return []
 
+# ============ SALEFINDER per-ingredient SEARCH (accurate prices) ============
+# The productlist/search endpoint returns, per product, the headline price
+# (sf-pricedisplay), its unit (sf-optionsuffix: 'each'/blank) AND a comparative
+# unit price (sf-comparativeText: '$15.26 per kg', '$0.27 per 100g'). The
+# comparative price is what lets us scale to a recipe's portion correctly —
+# fixing the per-kg/per-each prices that svgData collapsed into wrong flat numbers.
+#
+# Needs the same catalogue/location IDs plus a token + saleGroup. The token is a
+# static embed key (from the catalogue's app.js), not a session value. Coles WA
+# defaults are baked in; Woolies values are env-overridable and fall back to the
+# shared token. If search is unavailable for a store, we degrade to svgData.
+_SF_DEFAULT_TOKEN = "570f5c4a44505b5f51477f531a03180a08051c1362352b2e21363226253968717d7a767d6762656262612b"
+
+SF_SEARCH = {
+    "coles": {
+        "token":     os.getenv("COLES_TOKEN", _SF_DEFAULT_TOKEN),
+        "saleGroup": os.getenv("COLES_SALEGROUP", "97"),
+    },
+    "woolworths": {
+        "token":     os.getenv("WOOLIES_TOKEN", _SF_DEFAULT_TOKEN),
+        "saleGroup": os.getenv("WOOLIES_SALEGROUP", "97"),
+    },
+}
+
+def _money(s):
+    m = _re_sf.search(r'\$?\s*(\d+(?:\.\d+)?)', s or '')
+    return float(m.group(1)) if m else None
+
+def _parse_comparative(text):
+    """'$15.26 per kg' -> (15.26, 1000.0g); '$0.27 per 100g' -> (0.27, 100.0g). Else None."""
+    if not text:
+        return None
+    val = _money(text)
+    if val is None:
+        return None
+    t = text.lower()
+    if _re_sf.search(r'per\s*kg', t):      return (val, 1000.0)
+    if _re_sf.search(r'per\s*100\s*g', t): return (val, 100.0)
+    if _re_sf.search(r'per\s*g\b', t):     return (val, 1.0)
+    return None
+
+import re as _re_sf
+_SF_ITEM_RE = _re_sf.compile(r'<a\b[^>]*class="[^"]*\bsf-item\b[^"]*"[^>]*>(.*?)</a>', _re_sf.I | _re_sf.S)
+
+def parse_salefinder_search_html(content_html: str, store: str) -> List[Dict]:
+    """Extract priced products from a productlist/search 'content' HTML blob."""
+    out = []
+    for block in _SF_ITEM_RE.findall(content_html or ""):
+        nm = _re_sf.search(r'sf-item-heading[^>]*>(.*?)</h4>', block, _re_sf.I | _re_sf.S)
+        if not nm:
+            continue
+        name = html.unescape(_re_sf.sub(r'<[^>]+>', '', nm.group(1))).strip()
+
+        def grab(cls):
+            m = _re_sf.search(r'class="[^"]*\b' + cls + r'\b[^"]*"[^>]*>(.*?)</span>',
+                              block, _re_sf.I | _re_sf.S)
+            return html.unescape(_re_sf.sub(r'<[^>]+>', '', m.group(1))).strip() if m else ""
+
+        now = _money(grab("sf-pricedisplay"))
+        if now is None:
+            continue
+        suffix = grab("sf-optionsuffix").lower()
+        regdesc = grab("sf-regoptiondesc")
+        was = _money(regdesc) if "was" in regdesc.lower() else None
+        cm = _re_sf.search(r'sf-comparativeText[^>]*>(.*?)</p>', block, _re_sf.I | _re_sf.S)
+        comp = _parse_comparative(html.unescape(_re_sf.sub(r'<[^>]+>', '', cm.group(1))).strip()) if cm else None
+        mb = _re_sf.search(r'any\s*(\d+)\s*for', (grab("sf-saleoptiondesc") or "").lower())
+        out.append({
+            "product": name, "price": now, "was_price": was,
+            "unit": ("ea" if suffix in ("each", "ea") else None),
+            "comp": comp, "multibuy": int(mb.group(1)) if mb else None,
+            "store": store.lower(),
+        })
+    return out
+
+_SF_SEARCH_CACHE = {}   # (store, query) -> [candidates]
+
+def sf_search(store: str, query: str) -> List[Dict]:
+    """Search a store's current catalogue for `query`. Cached; [] on miss/failure."""
+    store = store.lower()
+    key = (store, query.lower())
+    if key in _SF_SEARCH_CACHE:
+        return _SF_SEARCH_CACHE[key]
+    cfg = SALEFINDER.get(store, {})
+    scfg = SF_SEARCH.get(store, {})
+    sale, loc = cfg.get("catalogue"), cfg.get("location")
+    if not (sale and loc):
+        _SF_SEARCH_CACHE[key] = []
+        return []
+    params = {
+        "format": "json", "locationId": loc,
+        "token": scfg.get("token", _SF_DEFAULT_TOKEN),
+        "saleGroup": scfg.get("saleGroup", "97"),
+        "keyword": query, "extraProducts": "1",
+    }
+    url = f"https://embed.salefinder.com.au/productlist/search/{sale}/"
+    try:
+        resp = requests.get(url, params=params, timeout=15, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+            "Referer": "https://embed.salefinder.com.au/",
+        })
+        resp.raise_for_status()
+        data = _strip_jsonp(resp.text)
+        cands = parse_salefinder_search_html(data.get("content", ""), store)
+    except Exception as e:
+        print(f"  [SF search] {store} '{query}' failed ({e})")
+        cands = []
+    _SF_SEARCH_CACHE[key] = cands
+    return cands
+
+def sf_resolve_catalogue_id(store: str):
+    """
+    Best-effort: ask SaleFinder for the retailer's current catalogue id so the
+    weekly id never has to be set by hand. Returns a string id or None. The env
+    Variable still wins as an explicit override; this is only used to fill a gap.
+    NOTE: only verifiable when run against the live endpoint (not in the sandbox).
+    """
+    cfg = SALEFINDER.get(store.lower(), {})
+    scfg = SF_SEARCH.get(store.lower(), {})
+    ret, loc = cfg.get("retailer"), cfg.get("location")
+    if not (ret and loc):
+        return None
+    params = {
+        "format": "json", "token": scfg.get("token", _SF_DEFAULT_TOKEN),
+        "saleGroup": scfg.get("saleGroup", "97"), "locationId": loc,
+        "order": "oldestfirst",
+    }
+    url = f"https://embed.salefinder.com.au/catalogues/view/{ret}/"
+    try:
+        resp = requests.get(url, params=params, timeout=15, headers={
+            "User-Agent": "Mozilla/5.0", "Referer": "https://embed.salefinder.com.au/"})
+        resp.raise_for_status()
+        data = _strip_jsonp(resp.text)
+        ids = _re_sf.findall(r'saleId=(\d+)', data.get("content", ""))
+        if not ids:
+            return None
+        # the live "this week" flyer is the most recent (largest) id on offer
+        return max(ids, key=lambda x: int(x))
+    except Exception as e:
+        print(f"  [SF resolve] {store} failed ({e})")
+        return None
+
 def fetch_catalogue(url: str, store_name: str) -> List[Dict]:
     """
     Fetch this week's catalogue specials.
@@ -412,7 +555,13 @@ import re as _re
 # words that aren't useful for matching an ingredient to a catalogue product
 _STOP = set("""the a an of and or with in on for to fresh light free onion drained
 weight half can pack bag bags bunch bunches head heads jar bottle tin tinned canned
-roast diced minced fillet fillets piece pieces approx each whole""".split())
+roast diced minced fillet fillets piece pieces approx each whole
+coles woolworths woolies australian aussie grown proudly classic raw skin knob
+rspca approved hormones added quick cook value smart finest""".split())
+
+def _norm(w: str) -> str:
+    """Light singular/plural unifier so 'lemon' matches 'lemons', 'carrot'~'carrots'."""
+    return w[:-1] if (len(w) > 3 and w.endswith("s") and not w.endswith("ss")) else w
 
 _QTY_TOKEN = _re.compile(r'(\d+\.?\d*\s*(kg|g|ml|l)\b|[\u00d7x]\s*\d+|\(.*?\))', _re.I)
 
@@ -420,7 +569,7 @@ def _content_tokens(name: str):
     """Significant words from an item/product name (drops sizes, units, fillers)."""
     s = _QTY_TOKEN.sub(' ', (name or '').lower())
     s = _re.sub(r"[^a-z ]", ' ', s)
-    return {w for w in s.split() if len(w) > 2 and w not in _STOP}
+    return {_norm(w) for w in s.split() if len(w) > 2 and w not in _STOP}
 
 def parse_item_quantity(name: str):
     """
@@ -479,25 +628,112 @@ def _set_status(item: list, status: str):
     else:
         item.append(status)
 
+def _ordered_food_tokens(name: str):
+    """Significant words in order (for building search queries)."""
+    s = _QTY_TOKEN.sub(' ', (name or '').lower())
+    s = _re.sub(r"[^a-z ]", ' ', s)
+    return [w for w in s.split() if len(w) > 2 and w not in _STOP]
+
+# core protein/produce nouns worth a broad fallback search when the specific
+# phrase misses (Coles' own search returns 0 for 'chuck' but works for 'beef')
+_BROAD = {"beef","chicken","pork","lamb","salmon","prawns","prawn","fish","squid",
+          "potatoes","carrots","broccolini","orange","oranges","lemon","apple",
+          "apples","banana","tuna","bok","mince"}
+
+def _search_queries(name: str):
+    """Ordered, de-duped queries to try for one recipe item (capped at 4)."""
+    toks = _ordered_food_tokens(name)
+    if not toks:
+        return []
+    q = []
+    if len(toks) >= 2:
+        q.append(" ".join(toks[:2]))      # 'chicken breast', 'banana prawns'
+    q.append(toks[-1])                     # food noun is often the last word
+    for t in toks:                         # every broad noun, as fallbacks
+        if t in _BROAD:
+            q.append(t)
+    q.append(toks[0])                      # first token as last resort
+    seen, out = set(), []
+    for x in q:
+        if x and x not in seen:
+            seen.add(x); out.append(x)
+    return out[:4]
+
+def _best_search_candidate(item_name: str, cands: List[Dict]):
+    """Pick the candidate whose name best overlaps the recipe item (token-based)."""
+    rtok = _content_tokens(item_name)
+    if not rtok:
+        return None
+    best, best_shared = None, 0
+    for c in cands:
+        shared = len(rtok & _content_tokens(c.get("product", "")))
+        if shared > best_shared:
+            best, best_shared = c, shared
+    return best if best_shared >= 1 else None
+
+def _price_from_search(qty: Dict, cand: Dict):
+    """
+    Turn a search candidate into a portion price using real unit info.
+    Returns (price, was, basis) or None if it can't be done sensibly.
+    Priority: comparative per-kg/100g (most reliable) -> per-each*count -> flat.
+    Multibuy ('Any 2 for $15') is treated as a single-unit price (price/n).
+    """
+    price, was, comp = cand.get("price"), cand.get("was_price"), cand.get("comp")
+    unit, mb = cand.get("unit"), cand.get("multibuy")
+    grams, count = qty.get("grams"), qty.get("count")
+
+    if comp and grams:                      # $/kg or $/100g scaled to the portion
+        val, basis = comp
+        scaled = round(val * grams / basis, 2)
+        return (scaled, None, f"comp {val}/{int(basis)}g x {grams:g}g")
+
+    if mb and mb > 1:                        # multibuy -> per-single price
+        each = round(price / mb, 2)
+        return (round(each * (count or 1), 2), None, f"multibuy {mb}")
+
+    if unit == "ea":                         # advertised per-each
+        n = count or 1
+        return (round(price * n, 2), round(was * n, 2) if was else None, f"each x{n}")
+
+    # flat/pack/bottle shelf price. In the SEARCH path the unit fields are known,
+    # so the absence of a per-kg/each basis means this *is* the item's price —
+    # use it even when the recipe lists a weight/volume (e.g. a 500mL soy bottle).
+    return (round(price, 2), round(was, 2) if was else None, "shelf")
+
+def _price_from_svgdata(qty: Dict, sc: Dict, est_price):
+    """
+    Fallback when search has no unit info (svgData pool). svgData carries no unit,
+    so a per-kg figure would otherwise be inserted as a flat price (the $42 lemon).
+    Guardrail: only accept it when it's within a sane band of the bank estimate.
+    """
+    price = sc.get("price")
+    if price is None:
+        return None
+    if est_price and est_price > 0:
+        ratio = price / est_price
+        if ratio < 0.25 or ratio > 4.0:     # implausible vs estimate -> reject
+            return None
+    return (round(price, 2), None, "svgData~est")
+
 def merge_live_prices(recipes: List[Dict], all_items: List[Dict]):
     """
-    Overwrite each recipe item's price with this week's catalogue price where a
-    confident match exists, scaling per-kg prices to the item's quantity. Items
-    with no match keep their bank price and are flagged 'est'. Returns
-    (recipes, stats).
-    """
-    pool = []
-    for it in all_items:
-        pool.append({
-            "product": it.get("product", ""),
-            "price": it.get("price"),
-            "was_price": it.get("was_price"),
-            "unit": it.get("unit"),
-            "code": _store_code(it.get("store", "")),
-            "toks": _content_tokens(it.get("product", "")),
-        })
+    Price each recipe item from this week's catalogue.
 
-    stats = {"matched": 0, "total": 0, "scraped": len(all_items)}
+    Primary: per-ingredient SaleFinder search (real unit + comparative price),
+    scaled to the recipe's portion. Fallback: the bulk svgData pool, accepted
+    only within a sane band of the bank estimate (so unitless per-kg figures
+    can't land as absurd flat prices). No match -> keep bank price, flag 'est'.
+    """
+    # svgData fallback pool, indexed by store code
+    pool = [{
+        "price": it.get("price"), "code": _store_code(it.get("store", "")),
+        "toks": _content_tokens(it.get("product", "")),
+    } for it in all_items]
+
+    stats = {"matched": 0, "total": 0, "scraped": len(all_items),
+             "via_search": 0, "via_svgdata": 0}
+
+    code_to_store = {"c": "coles", "w": "woolworths"}
 
     for r in recipes:
         specials = []
@@ -505,50 +741,64 @@ def merge_live_prices(recipes: List[Dict], all_items: List[Dict]):
             stats["total"] += 1
             name = item[0]
             store = item[1] if len(item) > 1 else 'e'
-            rtok = _content_tokens(name)
-            if not rtok:
+            est_price = item[2] if len(item) > 2 else None
+            qty = parse_item_quantity(name)
+
+            # which stores to search: specific one, or both for 'either'
+            stores = [code_to_store[store]] if store in code_to_store else ["coles", "woolworths"]
+
+            chosen = None
+            for st in stores:
+                for q in _search_queries(name):
+                    cands = sf_search(st, q)
+                    if not cands:
+                        continue
+                    cand = _best_search_candidate(name, cands)
+                    if cand:
+                        res = _price_from_search(qty, cand)
+                        if res:
+                            chosen = (res, "search", cand.get("was_price"))
+                            break
+                if chosen:
+                    break
+
+            # fallback: bulk svgData pool, sanity-clamped to the estimate
+            if not chosen:
+                rtok = _content_tokens(name)
+                need = 2 if len(rtok) >= 2 else 1
+                best, best_shared = None, 0
+                for sc in pool:
+                    if store != 'e' and sc["code"] != store:
+                        continue
+                    shared = len(rtok & sc["toks"])
+                    if shared >= need and shared > best_shared:
+                        best, best_shared = sc, shared
+                if best:
+                    res = _price_from_svgdata(qty, best, est_price)
+                    if res:
+                        chosen = (res, "svgdata", None)
+
+            if not chosen:
                 _set_status(item, "est")
                 continue
-            need = 2 if len(rtok) >= 2 else 1
 
-            best, best_shared = None, 0
-            for sc in pool:
-                if store != 'e' and sc["code"] != store:
-                    continue
-                shared = len(rtok & sc["toks"])
-                if shared >= need and shared > best_shared:
-                    best, best_shared = sc, shared
-
-            if not best:
-                _set_status(item, "est")
-                continue
-
-            res = compute_scaled_price(parse_item_quantity(name), best)
-            if not res:
-                _set_status(item, "est")
-                continue
-
-            price, was, _basis = res
-            # pad item to at least 5 fields, then update price/was
+            (price, was, _basis), src, _w = chosen
             while len(item) < 5:
                 item.append(None)
             item[2] = price
             item[3] = was
             _set_status(item, "live")
             stats["matched"] += 1
-
+            stats["via_search" if src == "search" else "via_svgdata"] += 1
             if was and price and was > price:
                 specials.append({"store": store, "txt": "on special"})
 
         if specials:
-            # de-dupe, cap to keep the planner's tag row tidy
-            seen = set()
-            uniq = []
+            seen, uniq = set(), []
             for sp in specials:
-                key = (sp["store"], sp["txt"])
-                if key not in seen:
-                    seen.add(key)
-                    uniq.append(sp)
+                k = (sp["store"], sp["txt"])
+                if k not in seen:
+                    seen.add(k); uniq.append(sp)
             r["specials"] = uniq[:3]
 
     return recipes, stats
@@ -653,6 +903,20 @@ def main():
     print(f"\n[1/5] Loading recipe bank...")
     recipe_bank = load_recipe_bank("recipe-bank.json")
     print(f"  Loaded {len(recipe_bank)} recipes")
+
+    # Optional: resolve this week's catalogueId automatically so the weekly
+    # Variables never need updating. Opt-in (SF_AUTO_RESOLVE=1) so it can't
+    # silently break the working manual setup until you've confirmed it.
+    if os.getenv("SF_AUTO_RESOLVE") == "1":
+        print("  [SF] Auto-resolving current catalogue ids...")
+        for st in ("coles", "woolworths"):
+            rid = sf_resolve_catalogue_id(st)
+            if rid:
+                old = SALEFINDER[st]["catalogue"]
+                SALEFINDER[st]["catalogue"] = rid
+                print(f"    {st}: {old or '(unset)'} -> {rid}")
+            else:
+                print(f"    {st}: could not resolve, keeping {SALEFINDER[st]['catalogue'] or '(unset)'}")
     
     print(f"\n[2/5] Fetching Coles catalogue (saleId {COLES_SALEID})...")
     coles_items = fetch_catalogue(COLES_URL, "Coles")
@@ -676,8 +940,9 @@ def main():
 
     print(f"\n[4b/5] Merging live catalogue prices...")
     selected, price_stats = merge_live_prices(selected, all_items)
-    print(f"  Updated {price_stats['matched']} of {price_stats['total']} items "
-          f"from {price_stats['scraped']} scraped specials")
+    print(f"  Priced {price_stats['matched']} of {price_stats['total']} items "
+          f"({price_stats.get('via_search',0)} via search, "
+          f"{price_stats.get('via_svgdata',0)} via catalogue pool)")
 
     thisweek_json = generate_thisweek_json(selected, COLES_SALEID, WOOLIES_SALEID, price_stats=price_stats)
 
