@@ -1,13 +1,16 @@
 {
   "metadata": {
-    "generated": "2026-06-28T09:12:14.411974",
+    "generated": "2026-06-29T10:46:25.307647",
     "week_start": "Wed 10",
     "week_end": "Tue 16",
     "coles_saleid": "66019",
     "coles_url": "https://www.coles.com.au/catalogues/view#view=list&saleId=66019&areaName=c-wa-met",
     "woolies_saleid": "66046",
     "woolies_url": "https://www.woolworths.com.au/shop/catalogue/view#view=list&saleId=66046&areaName=WA",
-    "note": "Real prices read from catalogues; items marked ~ are everyday/estimated",
+    "note": "Catalogue scrape returned no items this week \u2014 all prices are typical bank estimates. Check the run log / selectors.",
+    "price_matched": 0,
+    "price_total": 40,
+    "scraped_items": 0,
     "review_pending": true,
     "review_message": "\u26a0\ufe0f New meals generated! Household can review, skip, or swap meals below. Once at least 4 meals are approved, you're ready to shop."
   },
@@ -36,21 +39,24 @@
           "c",
           7.6,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Coles light soy 500mL",
           "c",
           3.0,
           null,
-          "pantry \u2014 lasts months"
+          "pantry \u2014 lasts months",
+          "est"
         ],
         [
           "Ginger knob",
           "e",
           1.2,
           null,
-          "keeps weeks"
+          "keeps weeks",
+          "est"
         ]
       ]
     },
@@ -78,21 +84,24 @@
           "c",
           12.0,
           15.0,
-          null
+          null,
+          "est"
         ],
         [
           "Woolworths diced tomatoes 400g \u00d72",
           "w",
           2.2,
           null,
-          "both cans used"
+          "both cans used",
+          "est"
         ],
         [
           "Rosemary, fresh",
           "e",
           3.0,
           null,
-          "dries well"
+          "dries well",
+          "est"
         ]
       ]
     },
@@ -120,21 +129,24 @@
           "w",
           10.0,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "WA navel oranges \u00d72",
           "e",
           1.75,
           null,
-          "$3.50/kg both stores"
+          "$3.50/kg both stores",
+          "est"
         ],
         [
           "Potatoes (from shared bag)",
           "e",
           0,
           null,
-          "allocate 200g"
+          "allocate 200g",
+          "est"
         ]
       ]
     },
@@ -162,21 +174,24 @@
           "w",
           11.5,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Beef stock 400mL (onion-free)",
           "e",
           3.0,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Ginger knob",
           "e",
           1.2,
           null,
-          "keeps weeks"
+          "keeps weeks",
+          "est"
         ]
       ]
     },
@@ -203,21 +218,24 @@
           "c",
           9.6,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Dill or thyme, fresh",
           "e",
           3.0,
           null,
-          "dries well"
+          "dries well",
+          "est"
         ],
         [
           "Lemon \u00d71",
           "e",
           0.7,
           null,
-          null
+          null,
+          "est"
         ]
       ]
     },
@@ -245,28 +263,32 @@
           "w",
           6.8,
           11.9,
-          "carcass \u2192 stock"
+          "carcass \u2192 stock",
+          "est"
         ],
         [
           "WA white potatoes 2kg bag",
           "e",
           6.0,
           null,
-          "shared 3 meals"
+          "shared 3 meals",
+          "est"
         ],
         [
           "Carrots \u00d74",
           "e",
           1.6,
           null,
-          "half now, half for braise"
+          "half now, half for braise",
+          "est"
         ],
         [
           "Thyme, fresh",
           "e",
           3.0,
           null,
-          "dries well"
+          "dries well",
+          "est"
         ]
       ]
     },
@@ -294,28 +316,32 @@
           "c",
           7.2,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Bok choy \u00d72",
           "e",
           3.0,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Orange (WA navel)",
           "e",
           0.88,
           null,
-          "shared with other meals"
+          "shared with other meals",
+          "est"
         ],
         [
           "Ginger knob",
           "e",
           1.2,
           null,
-          "keeps weeks"
+          "keeps weeks",
+          "est"
         ]
       ]
     },
@@ -343,28 +369,32 @@
           "w",
           8.1,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Granny Smith apples \u00d73",
           "e",
           1.5,
           null,
-          "low FODMAP"
+          "low FODMAP",
+          "est"
         ],
         [
           "Ginger knob",
           "e",
           1.2,
           null,
-          "keeps weeks"
+          "keeps weeks",
+          "est"
         ],
         [
           "Potatoes (from shared bag)",
           "e",
           0,
           null,
-          "allocate 250g"
+          "allocate 250g",
+          "est"
         ]
       ]
     },
@@ -392,28 +422,32 @@
           "c",
           4.8,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Lemongrass paste jar (or dried)",
           "e",
           4.0,
           null,
-          "lasts months"
+          "lasts months",
+          "est"
         ],
         [
           "Coconut milk 200mL",
           "e",
           1.1,
           null,
-          "half can"
+          "half can",
+          "est"
         ],
         [
           "Lime \u00d71",
           "e",
           0.8,
           null,
-          null
+          null,
+          "est"
         ]
       ]
     },
@@ -441,28 +475,32 @@
           "c",
           10.8,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Red wine 300mL (check FODMAP)",
           "e",
           4.0,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Beef stock 200mL (onion-free)",
           "e",
           1.5,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Thyme, fresh",
           "e",
           3.0,
           null,
-          "dries well"
+          "dries well",
+          "est"
         ]
       ]
     },
@@ -490,28 +528,32 @@
           "w",
           9.5,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Apple cider 200mL (check FODMAP label)",
           "e",
           3.5,
           null,
-          null
+          null,
+          "est"
         ],
         [
           "Granny Smith apples \u00d72",
           "e",
           1.0,
           null,
-          "low FODMAP"
+          "low FODMAP",
+          "est"
         ],
         [
           "Thyme, fresh",
           "e",
           3.0,
           null,
-          "dries well"
+          "dries well",
+          "est"
         ]
       ]
     },
@@ -539,7 +581,8 @@
           "c",
           6.0,
           12.0,
-          null
+          null,
+          "est"
         ]
       ]
     }
