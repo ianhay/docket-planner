@@ -26,10 +26,10 @@ jobs:
     
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: '3.11'
     
@@ -55,5 +55,13 @@ jobs:
         git config user.name "Docket Bot"
         git config user.email "docket-bot@example.com"
         git add thisweek.json
-        git commit -m "Weekly update: $(date -d 'next wednesday' +'%a %d %b')" || echo "No changes"
-        git push
+        git commit -m "Weekly update: $(date -d 'next wednesday' +'%a %d %b')" || { echo "No changes to commit"; exit 0; }
+        # Push. If the branch moved on (e.g. re-running an older run), rebase our
+        # freshly generated file onto the latest main and push again. '-X theirs'
+        # keeps OUR new thisweek.json if it conflicts with origin's older one.
+        git push || {
+          echo "Push rejected — rebasing onto latest main and retrying..."
+          git fetch origin main
+          git rebase -X theirs origin/main
+          git push
+        }
