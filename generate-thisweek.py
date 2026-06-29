@@ -575,16 +575,26 @@ def main():
           f"from {price_stats['scraped']} scraped specials")
 
     thisweek_json = generate_thisweek_json(selected, COLES_SALEID, WOOLIES_SALEID, price_stats=price_stats)
-    
-    print(f"\n[5/5] Pushing to GitHub...")
-    success = push_to_github(thisweek_json, GITHUB_TOKEN, GITHUB_REPO, GITHUB_EMAIL)
-    
-    if success:
-        print(f"\n[✓] Done! Week's meals are live.")
-        print(f"  URL: https://github.com/{GITHUB_REPO}/blob/main/thisweek.json")
+
+    print(f"\n[5/5] Writing thisweek.json...")
+    repo_path = os.getenv("REPO_PATH", ".")
+    out_path = os.path.join(repo_path, "thisweek.json")
+    with open(out_path, "w") as f:
+        json.dump(thisweek_json, f, indent=2)
+    print(f"  Wrote {out_path}")
+
+    # In CI the workflow's "Commit and push" step handles git. The script only
+    # pushes when explicitly asked (e.g. running locally with DOCKET_PUSH=1), so
+    # we never have two actors committing/pushing the same file and colliding
+    # with a non-fast-forward rejection.
+    if os.getenv("DOCKET_PUSH") == "1":
+        print("  DOCKET_PUSH=1 set — pushing from the script...")
+        push_to_github(thisweek_json, GITHUB_TOKEN, GITHUB_REPO, GITHUB_EMAIL)
     else:
-        print(f"\n[!] Failed to push (but meals were generated):")
-        print(json.dumps(thisweek_json, indent=2))
+        print("  Skipping git push (handled by CI; set DOCKET_PUSH=1 to push from the script).")
+
+    print(f"\n[\u2713] Done! {price_stats['matched']}/{price_stats['total']} items priced "
+          f"from {price_stats['scraped']} scraped specials.")
 
 if __name__ == "__main__":
     main()
