@@ -1,14 +1,14 @@
 {
   "metadata": {
-    "generated": "2026-06-29T12:41:25.451228",
+    "generated": "2026-06-30T00:11:12.174570",
     "week_start": "Wed 10",
     "week_end": "Tue 16",
     "coles_saleid": "66019",
     "coles_url": "https://www.coles.com.au/catalogues/view#view=list&saleId=66019&areaName=c-wa-met",
     "woolies_saleid": "66046",
     "woolies_url": "https://www.woolworths.com.au/shop/catalogue/view#view=list&saleId=66046&areaName=WA",
-    "note": "Prices: 11 of 38 items updated from this week's catalogue (554 specials scanned); the rest use typical bank prices. Items flagged 'est' are not live.",
-    "price_matched": 11,
+    "note": "Prices: 21 of 38 items updated from this week's catalogue (554 specials scanned); the rest use typical bank prices. Items flagged 'est' are not live.",
+    "price_matched": 21,
     "price_total": 38,
     "scraped_items": 554,
     "review_pending": true,
@@ -37,7 +37,7 @@
         [
           "Raw banana prawns 400g",
           "c",
-          19.0,
+          7.6,
           null,
           null,
           "live"
@@ -45,7 +45,7 @@
         [
           "Coles light soy 500mL",
           "c",
-          15.0,
+          7.5,
           null,
           "pantry \u2014 lasts months",
           "live"
@@ -90,10 +90,10 @@
         [
           "Beef stock 400mL (onion-free)",
           "e",
-          3.0,
+          2.25,
+          4.5,
           null,
-          null,
-          "est"
+          "live"
         ],
         [
           "Ginger knob",
@@ -103,6 +103,12 @@
           "keeps weeks",
           "est"
         ]
+      ],
+      "specials": [
+        {
+          "store": "e",
+          "txt": "on special"
+        }
       ]
     },
     {
@@ -142,10 +148,10 @@
         [
           "Lemon \u00d71",
           "e",
-          42.0,
+          0.7,
           null,
           null,
-          "live"
+          "est"
         ]
       ]
     },
@@ -179,8 +185,8 @@
         [
           "WA white potatoes 2kg bag",
           "e",
-          4.0,
-          null,
+          3.2,
+          6.5,
           "shared 3 meals",
           "live"
         ],
@@ -200,6 +206,12 @@
           "dries well",
           "est"
         ]
+      ],
+      "specials": [
+        {
+          "store": "e",
+          "txt": "on special"
+        }
       ]
     },
     {
@@ -224,7 +236,7 @@
         [
           "Chicken breast 450g",
           "c",
-          15.0,
+          7.5,
           null,
           null,
           "live"
@@ -240,10 +252,10 @@
         [
           "Orange (WA navel)",
           "e",
-          0.88,
+          3.5,
           null,
           "shared with other meals",
-          "est"
+          "live"
         ],
         [
           "Ginger knob",
@@ -285,10 +297,10 @@
         [
           "Granny Smith apples \u00d73",
           "e",
-          1.5,
-          null,
+          3.0,
+          5.0,
           "low FODMAP",
-          "est"
+          "live"
         ],
         [
           "Ginger knob",
@@ -306,6 +318,12 @@
           "allocate 250g",
           "live"
         ]
+      ],
+      "specials": [
+        {
+          "store": "e",
+          "txt": "on special"
+        }
       ]
     },
     {
@@ -330,7 +348,7 @@
         [
           "Chicken breast 300g",
           "c",
-          15.0,
+          7.5,
           null,
           null,
           "live"
@@ -338,18 +356,18 @@
         [
           "Lemongrass paste jar (or dried)",
           "e",
-          4.0,
+          3.8,
           null,
           "lasts months",
-          "est"
+          "live"
         ],
         [
           "Coconut milk 200mL",
           "e",
-          1.1,
-          null,
+          1.65,
+          3.3,
           "half can",
-          "est"
+          "live"
         ],
         [
           "Lime \u00d71",
@@ -359,6 +377,12 @@
           null,
           "est"
         ]
+      ],
+      "specials": [
+        {
+          "store": "e",
+          "txt": "on special"
+        }
       ]
     },
     {
@@ -383,26 +407,26 @@
         [
           "Beef chuck 600g",
           "c",
-          10.8,
+          7.5,
           null,
           null,
-          "est"
+          "live"
         ],
         [
           "Red wine 300mL (check FODMAP)",
           "e",
-          4.0,
+          2.5,
+          5.0,
           null,
-          null,
-          "est"
+          "live"
         ],
         [
           "Beef stock 200mL (onion-free)",
           "e",
-          1.5,
+          2.25,
+          4.5,
           null,
-          null,
-          "est"
+          "live"
         ],
         [
           "Thyme, fresh",
@@ -412,6 +436,12 @@
           "dries well",
           "est"
         ]
+      ],
+      "specials": [
+        {
+          "store": "e",
+          "txt": "on special"
+        }
       ]
     },
     {
@@ -444,18 +474,18 @@
         [
           "Apple cider 200mL (check FODMAP label)",
           "e",
-          3.5,
+          5.9,
           null,
           null,
-          "est"
+          "live"
         ],
         [
           "Granny Smith apples \u00d72",
           "e",
-          1.0,
-          null,
+          3.0,
+          5.0,
           "low FODMAP",
-          "est"
+          "live"
         ],
         [
           "Thyme, fresh",
@@ -465,6 +495,12 @@
           "dries well",
           "est"
         ]
+      ],
+      "specials": [
+        {
+          "store": "e",
+          "txt": "on special"
+        }
       ]
     },
     {
@@ -489,10 +525,10 @@
         [
           "KB's Salt & Pepper Squid 360g",
           "c",
-          6.0,
-          12.0,
+          5.67,
           null,
-          "est"
+          null,
+          "live"
         ]
       ]
     },
@@ -518,7 +554,7 @@
         [
           "Salmon skin-on ~400g",
           "c",
-          36.0,
+          14.4,
           null,
           null,
           "live"
